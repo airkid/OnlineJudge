@@ -1,0 +1,29 @@
+{% extends "base_list.html" %}
+
+{% block title %}Problem List{% endblock %}
+
+{% block navbar %}{% include "include/navbar-problem.html" %}{% endblock %}
+
+{% block list %}
+<col width="10%" />
+<col width="40%" />
+<col width="18%" />
+<col width="12%" />
+<col width="20%" />
+<tr>
+    <th>ID</th>
+    <th>Title</th>
+    <th>Accepted/Submit</th>
+    <th>Author</th>
+    <th>Upload</th>
+</tr>
+{% for item in list %}
+<tr>
+    <th>{{ item.id }}</th>
+    <th><a href="/problem/{{ item.id }}">{{ item.title }}</a></th>
+    <th><a href="/problem/{{ item.id }}/status">{{ item.acceptted }}/{{ item.submitted }}</a></th>
+    <th>{{ item.uid }}</th>
+    <th>{{ item.time }}</th>
+</tr>
+{% endfor %}
+{% endblock %}

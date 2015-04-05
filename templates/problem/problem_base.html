@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ problem.title }}{% endblock %}
+
+{% block navbar %}{% include "include/navbar-problem.html" %}{% endblock %}
+
+{% block header %}
+<h1>{{ problem.title }}</h1>
+<ul class="list-inline">
+    <li>Time Limit: {{ problem.limit_time }}ms</li>
+    <li>Memory Limit: {{problem.limit_memory|filesizeformat}}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="panel panel-default">
+    {% include "problem/include/subnav.html" %}
+</div>
+{% block detail %}{% endblock %}
+{% endblock %}

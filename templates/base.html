@@ -5,6 +5,8 @@
         <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css">
         <script src="http://cdn.bootcss.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 
+        <script>{% block script %}{% endblock %}</script>
+
         <title>{% block title %}{% endblock %}</title>
 
     </head>
@@ -16,10 +18,17 @@
                 <ul class="nav navbar-nav">
                 {% block navbar %}{% endblock %}
                 </ul>
+                {% if user %}
+                <p class="navbar-collapse navbar-text  navbar-right">Welcome,
+                    <a href="/user/{{ user.id }}" class="navbar-link bg-info">{{ user.name }} </a>
+                    <a href="/logout" class="navbar-link bg-danger">Exit</a>
+                </p>
+                {% else %}
                 <div class="navbar-collapse navbar-right">
-                    <button class="btn btn-primary navbar-btn">Login</button>
-                    <button class="btn btn-default navbar-btn">Register</button>
+                    <a href="/login"><button class="btn btn-primary navbar-btn">Login</button></a>
+                    <a href="/register"><button class="btn btn-default navbar-btn">Register</button></a>
                 </div>
+                {% endif %}
             </div>
         </nav>
         <div class="container">
@@ -29,9 +38,7 @@
         {% block content %}{% endblock %}
         </div>
         <footer>
-        {% block footer %}
-            <p>SDU</p>
-        {% endblock %}
+        <center>{% block footer %}SDU{% endblock %}</center>
         </footer>
     </body>
 </html>

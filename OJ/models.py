@@ -1,21 +1,17 @@
 from django.db import models
+from django.contrib.auth.models import User as AuthUser
 
 # Create your models here.
 
 class User(models.Model):
-    name=models.CharField(max_length=30,unique=True)
-    pw=models.CharField(max_length=86)
-    email=models.EmailField()
-    time=models.DateTimeField(auto_now_add=True)
+    id=models.OneToOneField(AuthUser,primary_key=True)
+    school=models.CharField(max_length=50,blank=True)
 
     def __str__(self):
         return str(self.name)
 
-    class Meta:
-        ordering=['time']
-
 class Problem(models.Model):
-    uid=models.ForeignKey(User)
+    uid=models.ForeignKey(AuthUser)
     time=models.DateTimeField(auto_now_add=True)
     limit_time=models.PositiveIntegerField(default=1000)
     limit_memory=models.PositiveIntegerField(default=1024*1024*128)
@@ -36,7 +32,7 @@ class Problem(models.Model):
 
 class Answer(models.Model):
     pid=models.ForeignKey(Problem)
-    uid=models.ForeignKey(User)
+    uid=models.ForeignKey(AuthUser)
     time=models.DateTimeField(auto_now_add=True)
     example=models.BooleanField(default=False)
     input=models.TextField()
@@ -63,6 +59,7 @@ class Submit(models.Model):
         (0, 'Accepted'),
         (1, 'Waiting'),
         (2, 'Compiling'),
+        (3, 'Running'),
         (-1, 'Compilation Error'),
         (-2, 'Wrong Answer'),
         (-3, 'Presentation Error'),
@@ -73,7 +70,7 @@ class Submit(models.Model):
     )
 
     pid=models.ForeignKey(Problem)
-    uid=models.ForeignKey(User)
+    uid=models.ForeignKey(AuthUser)
     time=models.DateTimeField(auto_now_add=True)
     type=models.SmallIntegerField(choices=TYPE_CHOICE)
     code=models.FileField(upload_to='submit')

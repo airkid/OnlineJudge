@@ -47,6 +47,7 @@ class Answer(models.Model):
 class Submit(models.Model):
 
     TYPE_CHOICE=(
+        (0, 'UNKNOWN'),
         (1, 'C'),
         (2, 'C++'),
         (3, 'Java'),
@@ -72,14 +73,14 @@ class Submit(models.Model):
     pid=models.ForeignKey(Problem)
     uid=models.ForeignKey(AuthUser)
     time=models.DateTimeField(auto_now_add=True)
-    type=models.SmallIntegerField(choices=TYPE_CHOICE)
-    code=models.FileField(upload_to='submit')
+    type=models.PositiveSmallIntegerField(choices=TYPE_CHOICE)
+#    code=models.FileField(upload_to='submit')
     status=models.SmallIntegerField(choices=STATUS_CHOICE,default=1)
     run_time=models.PositiveSmallIntegerField(null=True)
     run_memory=models.PositiveIntegerField(null=True)
 
     def __str__(self):
-        return str(self.pid)+'  '+str(self.uid)+'  '+str(self.type.get_choices())
+        return str(self.pid)+'  '+str(self.uid)+'  '+str(self.type)
 
     class Meta:
         ordering=['time']

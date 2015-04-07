@@ -1,20 +1,17 @@
 from django.template import RequestContext
 from django.shortcuts import render_to_response,Http404,HttpResponseRedirect
 from django.contrib import auth
-
+from django.contrib.auth.decorators import login_required
 
 from django.db.models import Q
 
 from OJ.models import *
 
-def update_code(code):
-    return
-def update_file(file):
-    return
-
-def ren2res(template,req=None,dict={}):
+def ren2res(template,req,dict={}):
     if req.user.is_authenticated():
-        dict.update({'user':{'id':req.user.id,'name':req.user.username}})
+        dict.update({'user':{'id':req.user.id,'name':req.user.get_username()}})
+    else:
+        dict.update({'user':False})
     if req:
         return render_to_response(template,dict,context_instance=RequestContext(req))
     else:
@@ -23,18 +20,31 @@ def ren2res(template,req=None,dict={}):
 # Create your views here.
 
 def home(req):
-    return ren2res("home.html",req)
+    return ren2res("home.html",req,{})
 
 def login(req):
     if req.method=='GET':
-        return render_to_response("login.html",context_instance=RequestContext(req))
+        if req.user.is_anonymous():
+            if req.GET.get('next'):
+                req.session['next']=req.GET.get('next')
+            return ren2res("login.html",req,{})
+        else:
+            return HttpResponseRedirect("/")
     elif req.method=='POST':
         user=auth.authenticate(username=req.POST.get('name'),password=req.POST.get('pw'))
         if user is not None:
             auth.login(req,user)
-            return HttpResponseRedirect("/")
+            next=req.session.get('next')
+            if next:
+                return HttpResponseRedirect(next)
+            else:
+                return HttpResponseRedirect('/')
         else:
-            return render_to_response("login.html",{'err': True},context_instance=RequestContext(req))
+            return ren2res("login.html",req,{'err': "Wrong Username or Password!"})
+
+def logout(req):
+    auth.logout(req)
+    return HttpResponseRedirect('/')
 
 def problem(req):
     pg=int(req.GET.get('pg', 1))
@@ -57,18 +67,26 @@ def problem(req):
 
     lst=qs[(pg-1)*20:pg*20]
 
-    return render_to_response("problem.html",{'pg': pg,'page':list(range(start,end+1)),'list': lst})
+    return ren2res("problem.html",req,{'pg': pg,'page':list(range(start,end+1)),'list': lst})
 
 def problem_detail(req,pid):
     smp=Answer.objects.filter(pid__exact=pid).filter(example__exact=True)
-    return render_to_response("problem/problem_detail.html",{'problem': Problem.objects.get(id=pid),'sample': smp})
+    return ren2res("problem/problem_detail.html",req,{'problem': Problem.objects.get(id=pid),'sample': smp})
 
+@login_required
 def problem_submit(req,pid):
     if req.method=='GET':
-        return render_to_response("problem/problem_submit.html",{'problem': Problem.objects.get(id=pid)},context_instance=RequestContext(req))
+        return ren2res("problem/problem_submit.html",req,{'problem': Problem.objects.get(id=pid)})
     elif req.method=='POST':
+        sub=Submit(pid=Problem.objects.get(id=pid),uid=req.user,type=req.POST.get('lang'))
+        sub.save()
         if req.POST.get('code'):
-            update_code(req.POST.get('code'))
+            f=open('submit/'+str(sub.id),'w')
+            f.write(req.POST.get('code'))
         elif req.FILES:
-            update_file(req.FILES['file'])
-        return HttpResponseRedirect("/problem/"+pid+"/status")
+            f=open('submit/'+str(sub.id),'wb')
+            f.write(req.FILES['file'].read())
+        else:
+            return ren2res("problem/problem_submit.html",req,{'problem': Problem.objects.get(id=pid),'err': "No Submit!"})
+        f.close()
+        return HttpResponseRedirect("/problem/"+pid+"/")

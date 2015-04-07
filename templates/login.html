@@ -10,14 +10,6 @@
 
 {% block content %}
 
-{% if err %}
-<div class="row">
-    <div class=" col-md-6 col-md-offset-3">
-        <p class="text-warning">Wrong Username or Password!</p>
-    </div>
-</div>
-{% endif %}
-
 <form class="form-horizontal container-fluid" action="" method="POST">
     {% csrf_token %}
     <div class="row">

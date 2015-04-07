@@ -108,7 +108,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_DIR='media/'
+
 FILE_UPLOAD_MAX_MEMORY_SIZE=2560
+
+LOGIN_URL='/login'
 
 
 LOGGING = {

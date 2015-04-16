@@ -7,5 +7,5 @@ from .models import *
 
 admin.site.register(User)
 admin.site.register(Problem)
-admin.site.register(Answer)
+admin.site.register(TestCase)
 admin.site.register(Submit)

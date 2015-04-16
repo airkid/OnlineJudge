@@ -1,33 +1,90 @@
-import subprocess
+from os import cpu_count
+from subprocess import check_call,DEVNULL,CalledProcessError
+from threading import Thread,Event
+from queue import Queue
 from tempfile import TemporaryFile
+from models import Submit,TestCase
 
-from OJ.models import Submit,Answer
+SOURCE_PATH='../submit/source'
+BINARY_PATH='../submit/binary'
+ANSWER_PATH='../submit/answer'
+RESULT_PATH='../submit/result'
 
-ei = TemporaryFile(mode='w+')
-ei.write('2 3\n')
-ei.seek(0)
+class Daemon:
+    DAEMON_MAX=cpu_count()
+    
+    def __init__(self):
+        self.ev=Event()
+        self.add(self)
 
-o = TemporaryFile('w+')
+    def _run(self):
+        raise NotImplementedError()
 
-try:
-    p = subprocess.Popen("./run.sh 1 100000 ./test",shell=True,stdin=ei,stdout=o,universal_newlines=True)
-except:
-    print("except happen")
-p.wait()
+    @classmethod
+    def init(cls):
+        cls.__queue=Queue()
+        for i in range(cls.DAEMON_MAX):
+            th=Thread(target=cls.daemon,name=cls.__name__)
+            th.daemon=True
+            th.start()
 
-print("end")
+    @classmethod
+    def _add(cls,self):
+        cls.queue.put(self)
 
-o.seek(0)
-print(o.readline())
+    @classmethod
+    def __daemon(cls):
+        while True:
+            self=cls.queue.get();
+            self.run()
+            self.ev.set()
 
-ei.close()
-o.close()
-
-class Judger:
-    path="../submit"
-    def __init__(self,id):
-        self._id=int(id)
-    def judge(self):
+class Complier(Daemon):
+    
+    @staticmethod
+    def c(id):
+        cmd='gcc -o {bindir}/{id} {srcdir}/{id}.c'.format(
+                srcdir=SOURCE_PATH,bindir=BINARY_PATH,id=id)
+        err=open(RESULT_PATH+'/'+id,mode='w+')
+        try:
+            check_call(cmd.split(' '),stdout=DEVNULL,stderr=err)
+        except CalledProcessError as err:
+            if err.returncode >0:
+                return 
+            pass
+    @staticmethod
+    def cxx():
         pass
-    def _complie(self):
+    @staticmethod
+    def java():
         pass
+    @staticmethod
+    def python():
+        pass
+
+    compliers=[
+            None,
+            c,
+            cxx,
+            ]
+
+    def __init__(self,submit):
+        self.id=int(submit.id)
+        self.type=int(submit.type)
+        Daemon.__init__(self)
+
+    def _run(self,type,id):
+        fun=self.compliers[type]
+        fun(id)
+
+#ComplieDaemon.init()
+
+class Tester(Daemon):
+    pass
+
+class Judger(Daemon):
+    pass
+
+class Retester(Daemon):
+    pass
+#JudgeDaemon.init()

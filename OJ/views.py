@@ -7,6 +7,8 @@ from django.db.models import Q
 
 from OJ.models import *
 
+import OJ.judge as judge
+
 def ren2res(template,req,dict={}):
     if req.user.is_authenticated():
         dict.update({'user':{'id':req.user.id,'name':req.user.get_username()}})
@@ -70,7 +72,7 @@ def problem(req):
     return ren2res("problem.html",req,{'pg': pg,'page':list(range(start,end+1)),'list': lst})
 
 def problem_detail(req,pid):
-    smp=Answer.objects.filter(pid__exact=pid).filter(example__exact=True)
+    smp=TestCase.objects.filter(pid__exact=pid).filter(sample__exact=True)
     return ren2res("problem/problem_detail.html",req,{'problem': Problem.objects.get(id=pid),'sample': smp})
 
 @login_required
@@ -81,12 +83,13 @@ def problem_submit(req,pid):
         sub=Submit(pid=Problem.objects.get(id=pid),uid=req.user,type=req.POST.get('lang'))
         sub.save()
         if req.POST.get('code'):
-            f=open('submit/'+str(sub.id),'w')
+            f=open('JudgeFiles/source/'+str(sub.id),'w')
             f.write(req.POST.get('code'))
         elif req.FILES:
-            f=open('submit/'+str(sub.id),'wb')
+            f=open('JudgeFiles/source/'+str(sub.id),'wb')
             f.write(req.FILES['file'].read())
         else:
             return ren2res("problem/problem_submit.html",req,{'problem': Problem.objects.get(id=pid),'err': "No Submit!"})
         f.close()
+        judge.Complier(sub.id,sub.type)
         return HttpResponseRedirect("/problem/"+pid+"/")

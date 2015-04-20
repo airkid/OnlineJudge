@@ -5,7 +5,7 @@ from .models import *
 
 # Register your models here.
 
-admin.site.register(User)
+admin.site.register(UserInfo)
 admin.site.register(Problem)
 admin.site.register(TestCase)
 admin.site.register(Submit)

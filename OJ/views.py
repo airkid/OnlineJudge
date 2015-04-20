@@ -52,7 +52,7 @@ def problem(req):
     pg=int(req.GET.get('pg', 1))
     search=req.GET.get('search', "")
     if search:
-        qs=Problem.objects.filter(Q(id__icontains=search)|Q(title__icontains=search)|Q(uid__name__contains=search))
+        qs=Problem.objects.filter(Q(id__icontains=search)|Q(title__icontains=search)).select_related("uid__name").filter(uid__contains=search)
     else:
         qs=Problem.objects.all()
 

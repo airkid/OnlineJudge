@@ -91,5 +91,5 @@ def problem_submit(req,pid):
         else:
             return ren2res("problem/problem_submit.html",req,{'problem': Problem.objects.get(id=pid),'err': "No Submit!"})
         f.close()
-        judge.Complier(sub.id,sub.type)
+        judge.Judger(sub)
         return HttpResponseRedirect("/problem/"+pid+"/")

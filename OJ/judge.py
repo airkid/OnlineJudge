@@ -1,8 +1,8 @@
-from subprocess import call,DEVNULL
-from threading import Thread,Event#,Lock
+from subprocess import call,DEVNULL,Popen
+from threading import Thread,Event
 from queue import Queue
 from tempfile import TemporaryFile
-from OJ.models import Submit,TestCase
+from OJ.models import TestCase
 
 import os
 import os.path
@@ -49,6 +49,8 @@ try:
 except:
     pass
 
+CHROOT_PATH='/'
+
 class Daemon:
     from os import cpu_count
     DAEMON_MAX=cpu_count()
@@ -67,7 +69,8 @@ class Daemon:
                 cls.__daemon_num-=1
                 cls.__queue.task_done()
                 break
-            self._run()
+            if not self.__cancel:
+                self._run()
             self.__ev.set()
             cls.__queue.task_done()
 
@@ -96,6 +99,7 @@ class Daemon:
     def __init__(self):
         self.__ev=Event()
         self.__add()
+        self.__cancel=False
 
     def __add(self):
         if self.__queue:
@@ -109,12 +113,15 @@ class Daemon:
     def wait(self):
         self.__ev.wait()
 
+    def cancel(self):
+        self.__cancel=True
+
 class Complier(Daemon):
     
-    def c(self,id):
-        ori=ORIGIN_PATH+str(id)
-        src=SOURCE_PATH+str(id)+'.c'
-        dst=BINARY_PATH+str(id)
+    def c(self):
+        ori=ORIGIN_PATH+self.id
+        src=SOURCE_PATH+self.id+'.c'
+        dst=BINARY_PATH+self.id
         try:
             os.remove(src)
         except:
@@ -124,11 +131,16 @@ class Complier(Daemon):
         except:
             pass
         cmd='gcc -o {dst} {src}'.format(src=src,dst=dst)
-        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+str(id),mode='w+'))
-    def cxx(self,id):
-        ori=ORIGIN_PATH+str(id)
-        src=SOURCE_PATH+str(id)+'.cxx'
-        dst=BINARY_PATH+str(id)
+        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
+        if self.result>0:
+            self.result=-2
+        elif self.result<0:
+            self.result=-1
+
+    def cxx(self):
+        ori=ORIGIN_PATH+self.id
+        src=SOURCE_PATH+self.id+'.cxx'
+        dst=BINARY_PATH+self.id
         try:
             os.remove(src)
         except:
@@ -138,10 +150,14 @@ class Complier(Daemon):
         except:
             pass
         cmd='g++ -o {dst} {src}'.format(src=src,dst=dst)
-        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+str(id),mode='w+'))
-    def java(self,id):
+        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
+        if self.result>0:
+            self.result=-2
+        elif self.result<0:
+            self.result=-1
+    def java(self):
         pass
-    def python(self,id):
+    def python(self):
         pass
 
     compliers=[
@@ -153,31 +169,129 @@ class Complier(Daemon):
             ]
 
     def __init__(self,id,type):
-        self.id=int(id)
+        self.id=str(id)
         self.type=int(type)
         Daemon.__init__(self)
 
     def _run(self):
         fun=self.compliers[self.type]
-        fun(self,self.id)
+        fun(self)
 
 Complier.init()
 
 class Tester(Daemon):
-    def __init(self,id,type,input,output):
-        self.id=id
-        self.type=type
-        self.input=input
-        self.output=output
+
+    OUTPUT_MAX=1000
+
+    class Limiter:
+        def __init__(self,cpu,mem):
+            self.cpu=cpu
+            self.mem=mem
+        def __call__(self):
+            import resource as res
+            res.setrlimit(res.RLIMIT_CORE,(0,0))
+            res.setrlimit(res.RLIMIT_MEMLOCK,(0,0))
+            res.setrlimit(res.RLIMIT_MSGQUEUE,(0,0))
+            res.setrlimit(res.RLIMIT_NPROC,(0,0))
+            res.setrlimit(res.RLIMIT_FSIZE,(Tester.OUTPUT_MAX,Tester.OUTPUT_MAX))
+            res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
+            res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
+
+            ##os.chroot(CHROOT_PATH)
+            os.nice(10)
+
+    def elf(self):
+        ofile=TemporaryFile('w+t')
+        bin=BINARY_PATH+self.id
+        p=Popen(bin.split(' '),stdin=self.ifile,stdout=ofile,universal_newlines=True,
+                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),
+                stderr=DEVNULL)
+        p.wait()
+
+        self.result=0
+        if p.returncode==-9:
+            self.result=-5
+        elif p.returncode==-11:
+            self.result=-6
+        elif p.returncode==-25:
+            self.result=-4
+        elif p.returncode<0:
+            self.result=-3
+        else:
+            ofile.seek(0)
+            if self.output!=ofile.read(-1):
+                self.result=-7
+
+    def java(self):
+        pass
+    
+    def pyc(self):
+        pass
+
+    testers=[
+            None,
+            elf,
+            elf,
+            java,
+            pyc,
+            ]
+
+    def __init__(self,id,type,input,output,cpu,mem):
+        self.id=str(id)
+        self.type=int(type)
+        self.ifile=TemporaryFile(mode='w+t')
+        self.ifile.write(input)
+        self.ifile.seek(0)
+        self.output=str(output)
+        self.lcpu=cpu
+        self.lmem=mem
         Daemon.__init__(self)
 
     def _run(self):
-        fun=self.testers[type]
-        fun(self,self.id,self.input,self.output)
+        fun=self.testers[self.type]
+        fun(self)
+
+Tester.init()
 
 class Judger(Daemon):
-    pass
+    def __init__(self,submit):
+        self.__submit=submit
+
+        prob=submit.pid
+        self.id=str(submit.id)
+        self.type=int(submit.type)
+        self.lcpu=int(prob.limit_time)
+        self.lmem=int(prob.limit_memory)
+        Daemon.__init__(self)
+
+    def _run(self):
+        c=Complier(self.id,self.type)
+        c.wait()
+        if c.result:
+            self.__submit.status=c.result
+            self.__submit.save()
+            return
+            
+        tlist=[]
+        for case in TestCase.objects.filter(pid__exact=self.__submit.pid):
+            tlist.append(Tester(self.id,self.type,case.input,case.output,self.lcpu,self.lmem))
+
+        over=False
+        for t in tlist:
+            if over:
+                t.cancel()
+                continue
+            t.wait()
+            if t.result:
+                over=True
+                self.__submit.status=t.result
+                self.__submit.save()
+
+        if not over:
+            self.__submit.status=0
+            self.__submit.save()
+
+Judger.init()
 
 class Retester(Daemon):
     pass
-#JudgeDaemon.init()

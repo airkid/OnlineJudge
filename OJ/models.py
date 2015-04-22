@@ -18,7 +18,7 @@ LANG_CHOICE = (
     (4, 'Python'),
     (5, 'Pascal'),
     (6, 'FORTRAN'),
-)
+    )
 
 class Problem(models.Model):
     uid = models.ForeignKey(User)
@@ -83,3 +83,12 @@ class Submit(models.Model):
 
     class Meta:
         ordering = ['time']
+
+class Contest(models.Model):
+    uid = models.ForeignKey(User)
+    name = models.CharField(max_length=254)
+    start_time = models.DateTimeField()
+    end_time = models.DurationField()
+
+    def __str__(self):
+        return str(self.name)

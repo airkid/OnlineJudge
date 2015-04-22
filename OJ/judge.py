@@ -117,11 +117,13 @@ class Daemon:
         self.__cancel=True
 
 class Complier(Daemon):
-    
     def c(self):
         ori=ORIGIN_PATH+self.id
         src=SOURCE_PATH+self.id+'.c'
-        dst=BINARY_PATH+self.id
+        if self.aa:
+            dst=ANSWER_PATH+self.id
+        else:
+            dst=BINARY_PATH+self.id
         try:
             os.remove(src)
         except:
@@ -130,8 +132,13 @@ class Complier(Daemon):
             os.symlink(ori,src)
         except:
             pass
-        cmd='gcc -o {dst} {src}'.format(src=src,dst=dst)
-        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
+        cmd=[
+                'gcc',
+                '-o',
+                ]
+        cmd.append(dst)
+        cmd.append(src)
+        self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
         if self.result>0:
             self.result=-2
         elif self.result<0:
@@ -140,7 +147,10 @@ class Complier(Daemon):
     def cxx(self):
         ori=ORIGIN_PATH+self.id
         src=SOURCE_PATH+self.id+'.cxx'
-        dst=BINARY_PATH+self.id
+        if self.aa:
+            dst=ANSWER_PATH+self.id
+        else:
+            dst=BINARY_PATH+self.id
         try:
             os.remove(src)
         except:
@@ -149,13 +159,52 @@ class Complier(Daemon):
             os.symlink(ori,src)
         except:
             pass
-        cmd='g++ -o {dst} {src}'.format(src=src,dst=dst)
-        self.result=call(cmd.split(' '),stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
+        cmd=[
+                'g++',
+                '-o',
+                ]
+        cmd.append(dst)
+        cmd.append(src)
+        self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
         if self.result>0:
             self.result=-2
         elif self.result<0:
             self.result=-1
     def java(self):
+        ori=ORIGIN_PATH+self.id
+        src=SOURCE_PATH+self.id
+        try:
+            os.mkdir(src);
+        except:
+            pass
+        src+='/Main.java'
+        try:
+            os.remove(src)
+        except:
+            pass
+        try:
+            os.symlink(ori,src)
+        except:
+            pass
+        if self.aa:
+            dst=ANSWER_PATH+self.id
+        else:
+            dst=BINARY_PATH+self.id
+        try:
+            os.mkdir(dst)
+        except:
+            pass
+        cmd=[
+                'javac',
+                '-d',
+                ]
+        cmd.append(dst)
+        cmd.append(src)
+        self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
+        if self.result>0:
+            self.result=-2
+        elif self.result<0:
+            self.result=-1
         pass
     def python(self):
         pass
@@ -168,9 +217,10 @@ class Complier(Daemon):
             python,
             ]
 
-    def __init__(self,id,type):
+    def __init__(self,id,type,as_answer=False):
         self.id=str(id)
         self.type=int(type)
+        self.aa=as_answer
         Daemon.__init__(self)
 
     def _run(self):
@@ -180,7 +230,6 @@ class Complier(Daemon):
 Complier.init()
 
 class Tester(Daemon):
-
     OUTPUT_MAX=1000
 
     class Limiter:
@@ -202,8 +251,11 @@ class Tester(Daemon):
 
     def elf(self):
         ofile=TemporaryFile('w+t')
-        bin=BINARY_PATH+self.id
-        p=Popen(bin.split(' '),stdin=self.ifile,stdout=ofile,universal_newlines=True,
+        if self.ua:
+            bin=ANSWER_PATH+self.id
+        else:
+            bin=BINARY_PATH+self.id
+        p=Popen(bin,stdin=self.ifile,stdout=ofile,universal_newlines=True,
                 preexec_fn=Tester.Limiter(self.lcpu,self.lmem),
                 stderr=DEVNULL)
         p.wait()
@@ -236,7 +288,7 @@ class Tester(Daemon):
             pyc,
             ]
 
-    def __init__(self,id,type,input,output,cpu,mem):
+    def __init__(self,id,type,input,output,cpu,mem,use_answer=False):
         self.id=str(id)
         self.type=int(type)
         self.ifile=TemporaryFile(mode='w+t')
@@ -245,6 +297,7 @@ class Tester(Daemon):
         self.output=str(output)
         self.lcpu=cpu
         self.lmem=mem
+        self.ua=use_answer
         Daemon.__init__(self)
 
     def _run(self):
@@ -293,5 +346,5 @@ class Judger(Daemon):
 
 Judger.init()
 
-class Retester(Daemon):
+class Hacker(Daemon):
     pass

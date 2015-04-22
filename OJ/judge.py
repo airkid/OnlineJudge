@@ -132,12 +132,7 @@ class Complier(Daemon):
             os.symlink(ori,src)
         except:
             pass
-        cmd=[
-                'gcc',
-                '-o',
-                ]
-        cmd.append(dst)
-        cmd.append(src)
+        cmd=['gcc','-o',dst,src]
         self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
         if self.result>0:
             self.result=-2
@@ -159,12 +154,7 @@ class Complier(Daemon):
             os.symlink(ori,src)
         except:
             pass
-        cmd=[
-                'g++',
-                '-o',
-                ]
-        cmd.append(dst)
-        cmd.append(src)
+        cmd=['g++','-o',dst,src]
         self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
         if self.result>0:
             self.result=-2
@@ -194,12 +184,7 @@ class Complier(Daemon):
             os.mkdir(dst)
         except:
             pass
-        cmd=[
-                'javac',
-                '-d',
-                ]
-        cmd.append(dst)
-        cmd.append(src)
+        cmd=['javac','-d',dst,src]
         self.result=call(cmd,stdout=DEVNULL,stderr=open(RESULT_PATH+self.id,mode='w+'))
         if self.result>0:
             self.result=-2
@@ -207,7 +192,29 @@ class Complier(Daemon):
             self.result=-1
         pass
     def python(self):
-        pass
+        from py_complie import complie,PyCompileError
+        ori=ORIGIN_PATH+self.id
+        src=SOURCE_PATH+self.id+'.py'
+        if self.aa:
+            dst=ANSWER_PATH+self.id+'.pyc'
+        else:
+            dst=BINARY_PATH+self.id+'.pyc'
+        try:
+            os.remove(src)
+        except:
+            pass
+        try:
+            os.symlink(ori,src)
+        except:
+            pass
+
+        self.result=0
+        try:
+            complie(src,dst,doraise=True,optimize=0)
+        except PyCompileError as err:
+            f=open(RESULT_PATH+self.id,mode='w+')
+            f.write(str(err)) #try try try wtf the error output is?
+            self.result=-2;
 
     compliers=[
             None,
@@ -256,8 +263,7 @@ class Tester(Daemon):
         else:
             bin=BINARY_PATH+self.id
         p=Popen(bin,stdin=self.ifile,stdout=ofile,universal_newlines=True,
-                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),
-                stderr=DEVNULL)
+                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),stderr=DEVNULL)
         p.wait()
 
         self.result=0
@@ -275,9 +281,55 @@ class Tester(Daemon):
                 self.result=-7
 
     def java(self):
-        pass
+        ofile=TemporaryFile('w+t')
+        if self.ua:
+            dst=ANSWER_PATH+self.id
+        else:
+            dst=BINARY_PATH+self.id
+        cmd=['java','-cp',dst,'Main']
+        p=Popen(cmd,stdin=self.ifile,stdout=ofile,universal_newlines=True,
+                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),stderr=DEVNULL)
+        p.wait()
+
+        self.result=0
+        if p.returncode==-9:
+            self.result=-5
+        elif p.returncode==-11:
+            self.result=-6
+        elif p.returncode==-25:
+            self.result=-4
+        elif p.returncode<0:
+            self.result=-3
+        else:
+            ofile.seek(0)
+            if self.output!=ofile.read(-1):
+                self.result=-7
     
     def pyc(self):
+        ofile=TemporaryFile('w+t')
+        if self.ua:
+            dst=ANSWER_PATH+self.id+'.pyc'
+        else:
+            dst=BINARY_PATH+self.id+'.pyc'
+        cmd=['python',dst]
+        p=Popen(cmd,stdin=self.ifile,stdout=ofile,universal_newlines=True,
+                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),stderr=DEVNULL)
+        p.wait()
+
+        self.result=0
+        if p.returncode==-9:
+            self.result=-5
+        elif p.returncode==-11:
+            self.result=-6
+        elif p.returncode==-25:
+            self.result=-4
+        elif p.returncode<0:
+            self.result=-3
+        else:
+            ofile.seek(0)
+            if self.output!=ofile.read(-1):
+                self.result=-7
+        
         pass
 
     testers=[

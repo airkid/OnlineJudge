@@ -11,7 +11,7 @@ class UserInfo(models.Model):
         return str(self.id)
 
 LANG_CHOICE = (
-    (0, 'UNKNOWN'),
+    (0, 'NONE'),
     (1, 'C'),
     (2, 'C++'),
     (3, 'Java'),
@@ -25,7 +25,7 @@ class Problem(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     limit_time = models.PositiveIntegerField(default=1)
     limit_memory = models.PositiveIntegerField(default=1024*1024*128)
-    answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE,default=1)
+    answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE,default=0)
     title = models.CharField(max_length=254)
     content = models.TextField()
     input = models.TextField()

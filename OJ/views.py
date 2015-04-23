@@ -80,7 +80,7 @@ def problem_submit(req,pid):
     if req.method=='GET':
         return ren2res("problem/problem_submit.html",req,{'problem': Problem.objects.get(id=pid)})
     elif req.method=='POST':
-        sub=Submit(pid=Problem.objects.get(id=pid),uid=req.user,type=req.POST.get('lang'))
+        sub=Submit(pid=Problem.objects.get(id=pid),uid=req.user,lang=req.POST.get('lang'))
         sub.save()
         if req.POST.get('code'):
             f=open('JudgeFiles/source/'+str(sub.id),'w')

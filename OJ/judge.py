@@ -125,6 +125,11 @@ class Complier(Daemon):
         else:
             dst=BINARY_PATH+self.id
         try:
+            os.mkdir(dst)
+        except:
+            pass
+        dst+='/c'+self.id
+        try:
             os.remove(src)
         except:
             pass
@@ -138,6 +143,8 @@ class Complier(Daemon):
             self.result=-2
         elif self.result<0:
             self.result=-1
+        else:
+            os.remove(RESULT_PATH+self.id)
 
     def cxx(self):
         ori=ORIGIN_PATH+self.id
@@ -146,6 +153,11 @@ class Complier(Daemon):
             dst=ANSWER_PATH+self.id
         else:
             dst=BINARY_PATH+self.id
+        try:
+            os.mkdir(dst)
+        except:
+            pass
+        dst+='/x'+self.id
         try:
             os.remove(src)
         except:
@@ -160,6 +172,9 @@ class Complier(Daemon):
             self.result=-2
         elif self.result<0:
             self.result=-1
+        else:
+            os.remove(RESULT_PATH+self.id)
+
     def java(self):
         ori=ORIGIN_PATH+self.id
         src=SOURCE_PATH+self.id
@@ -192,13 +207,18 @@ class Complier(Daemon):
             self.result=-1
         pass
     def python(self):
-        from py_complie import complie,PyCompileError
+        from py_compile import compile,PyCompileError
         ori=ORIGIN_PATH+self.id
         src=SOURCE_PATH+self.id+'.py'
         if self.aa:
-            dst=ANSWER_PATH+self.id+'.pyc'
+            dst=ANSWER_PATH+self.id
         else:
-            dst=BINARY_PATH+self.id+'.pyc'
+            dst=BINARY_PATH+self.id
+        try:
+            os.mkdir(dst)
+        except:
+            pass
+        dst+='/'+self.id+'.pyc'
         try:
             os.remove(src)
         except:
@@ -210,7 +230,7 @@ class Complier(Daemon):
 
         self.result=0
         try:
-            complie(src,dst,doraise=True,optimize=0)
+            compile(src,dst,doraise=True,optimize=0)
         except PyCompileError as err:
             f=open(RESULT_PATH+self.id,mode='w+')
             f.write(str(err)) #try try try wtf the error output is?
@@ -256,12 +276,12 @@ class Tester(Daemon):
             ##os.chroot(CHROOT_PATH)
             os.nice(10)
 
-    def elf(self):
+    def c(self):
         ofile=TemporaryFile('w+t')
         if self.ua:
-            bin=ANSWER_PATH+self.id
+            bin=ANSWER_PATH+self.id+'/c'+self.id
         else:
-            bin=BINARY_PATH+self.id
+            bin=BINARY_PATH+self.id+'/c'+self.id
         p=Popen(bin,stdin=self.ifile,stdout=ofile,universal_newlines=True,
                 preexec_fn=Tester.Limiter(self.lcpu,self.lmem),stderr=DEVNULL)
         p.wait()
@@ -279,6 +299,30 @@ class Tester(Daemon):
             ofile.seek(0)
             if self.output!=ofile.read(-1):
                 self.result=-7
+    def cxx(self):
+        ofile=TemporaryFile('w+t')
+        if self.ua:
+            bin=ANSWER_PATH+self.id+'/x'+self.id
+        else:
+            bin=BINARY_PATH+self.id+'/x'+self.id
+        p=Popen(bin,stdin=self.ifile,stdout=ofile,universal_newlines=True,
+                preexec_fn=Tester.Limiter(self.lcpu,self.lmem),stderr=DEVNULL)
+        p.wait()
+
+        self.result=0
+        if p.returncode==-9:
+            self.result=-5
+        elif p.returncode==-11:
+            self.result=-6
+        elif p.returncode==-25:
+            self.result=-4
+        elif p.returncode<0:
+            self.result=-3
+        else:
+            ofile.seek(0)
+            if self.output!=ofile.read(-1):
+                self.result=-7
+
 
     def java(self):
         ofile=TemporaryFile('w+t')
@@ -334,8 +378,8 @@ class Tester(Daemon):
 
     testers=[
             None,
-            elf,
-            elf,
+            c,
+            cxx,
             java,
             pyc,
             ]
@@ -395,6 +439,10 @@ class Judger(Daemon):
         if not over:
             self.__submit.status=0
             self.__submit.save()
+
+        from shutil import rmtree
+
+        rmtree(BINARY_PATH+self.id)
 
 Judger.init()
 

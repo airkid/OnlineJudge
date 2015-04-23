@@ -89,6 +89,7 @@ class Contest(models.Model):
     name = models.CharField(max_length=254)
     start_time = models.DateTimeField()
     end_time = models.DurationField()
+    problems = models.ManyToManyField(Problem)
 
     def __str__(self):
         return str(self.name)

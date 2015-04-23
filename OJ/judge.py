@@ -2,7 +2,7 @@ from subprocess import call,DEVNULL,Popen
 from threading import Thread,Event
 from queue import Queue
 from tempfile import TemporaryFile
-from OJ.models import TestCase
+from OJ.models import TestCase,Submit
 
 import os
 import os.path
@@ -224,14 +224,14 @@ class Complier(Daemon):
             python,
             ]
 
-    def __init__(self,id,type,as_answer=False):
+    def __init__(self,id,lang,as_answer=False):
         self.id=str(id)
-        self.type=int(type)
+        self.lang=int(lang)
         self.aa=as_answer
         Daemon.__init__(self)
 
     def _run(self):
-        fun=self.compliers[self.type]
+        fun=self.compliers[self.lang]
         fun(self)
 
 Complier.init()
@@ -340,9 +340,9 @@ class Tester(Daemon):
             pyc,
             ]
 
-    def __init__(self,id,type,input,output,cpu,mem,use_answer=False):
+    def __init__(self,id,lang,input,output,cpu,mem,use_answer=False):
         self.id=str(id)
-        self.type=int(type)
+        self.lang=int(lang)
         self.ifile=TemporaryFile(mode='w+t')
         self.ifile.write(input)
         self.ifile.seek(0)
@@ -353,7 +353,7 @@ class Tester(Daemon):
         Daemon.__init__(self)
 
     def _run(self):
-        fun=self.testers[self.type]
+        fun=self.testers[self.lang]
         fun(self)
 
 Tester.init()
@@ -364,13 +364,13 @@ class Judger(Daemon):
 
         prob=submit.pid
         self.id=str(submit.id)
-        self.type=int(submit.type)
+        self.lang=int(submit.lang)
         self.lcpu=int(prob.limit_time)
         self.lmem=int(prob.limit_memory)
         Daemon.__init__(self)
 
     def _run(self):
-        c=Complier(self.id,self.type)
+        c=Complier(self.id,self.lang)
         c.wait()
         if c.result:
             self.__submit.status=c.result
@@ -379,7 +379,7 @@ class Judger(Daemon):
             
         tlist=[]
         for case in TestCase.objects.filter(pid__exact=self.__submit.pid):
-            tlist.append(Tester(self.id,self.type,case.input,case.output,self.lcpu,self.lmem))
+            tlist.append(Tester(self.id,self.lang,case.input,case.output,self.lcpu,self.lmem))
 
         over=False
         for t in tlist:
@@ -399,4 +399,50 @@ class Judger(Daemon):
 Judger.init()
 
 class Hacker(Daemon):
-    pass
+    def __init__(self,submit,case,success_save=False,hack_all=True):
+        self.result=0
+        if submit.status!=0:
+            self.result=1
+            return
+        if submit.pid!=case.pid:
+            self.result=2;
+            return
+        self.__case=case
+        self.__submit=submit
+
+        prob=submit.pid
+        self.id=str(submit.id)
+        self.lang=int(submit.lang)
+        self.input=str(case.input)
+        self.output=str(case.output)
+        self.lcpu=int(prob.limit_time)
+        self.lmem=int(prob.limit_memory)
+        self.ss=success_save
+        self.ha=hack_all
+        Daemon.__init__(self) 
+    def _run(self):
+        if self.result>0:
+            return
+        c=Complier(self.id,self.lang)
+        c.wait()
+        if c.result!=0:
+            self.result=c.result
+            self.__submit.status=c.result
+            self.__submit.save()
+            return
+        t=Tester(self.id,self.lang,self.input,self.output,self.lcpu,self.lmem)
+        t.wait()
+        if t.result==0:
+            self.result=3
+            return
+
+        if self.ss:
+            self.__case.save()
+        self.__submit.status=t.result
+        self.__submit.save()
+
+        if not self.ha:
+            return
+        for sub in Submit.objects.filter(pid__exact=self.__submit.pid,status__exact=0):
+            Hacker(sub,self.__case,hack_all=False)
+

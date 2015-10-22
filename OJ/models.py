@@ -22,14 +22,16 @@ LANG_CHOICE = (
 
 class Problem(models.Model):
     uid = models.ForeignKey(User)
-    time = models.DateTimeField(auto_now_add=True)
+    create_time = models.DateTimeField(auto_now_add=True)
     limit_time = models.PositiveIntegerField(default=1)
     limit_memory = models.PositiveIntegerField(default=1024*1024*128)
     answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE,default=0)
     title = models.CharField(max_length=254)
     content = models.TextField()
-    input = models.TextField()
-    output = models.TextField()
+    sample_input = models.TextField()
+    sample_output = models.TextField()
+    #file_input = models.FileField()
+    #file_output = models.FileField()
     note = models.TextField(blank=True)
     source = models.TextField(blank=True)
 
@@ -37,7 +39,7 @@ class Problem(models.Model):
         return str(self.title)
 
     class Meta:
-        ordering = ['time']
+        ordering = ['create_time']
 
 class TestCase(models.Model):
     pid = models.ForeignKey(Problem)
@@ -88,8 +90,8 @@ class Contest(models.Model):
     uid = models.ForeignKey(User)
     name = models.CharField(max_length=254)
     start_time = models.DateTimeField()
-    end_time = models.DurationField()
-    problems = models.ManyToManyField(Problem)
+    duration_time = models.DurationField()
+    problems = models.ManyToManyField(Problem, related_name="contests")
 
     def __str__(self):
         return str(self.name)

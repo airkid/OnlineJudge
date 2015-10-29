@@ -79,6 +79,7 @@ class Submit(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
     run_time = models.PositiveSmallIntegerField(null=True)
     run_memory = models.PositiveIntegerField(null=True)
+    return_code = models.IntegerField(null=True);
 
     def __str__(self):
         return str(self.pid)+'  '+str(self.uid)+'  '+str(self.lang)

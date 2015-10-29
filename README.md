@@ -8,3 +8,9 @@ The Online Judge Website for Shandong University
 1. Hack function
 1. Status Page
 1. Rank Page
+
+
+ac 0
+re -8
+ole -25
+tle -24

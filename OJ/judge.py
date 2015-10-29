@@ -1,3 +1,4 @@
+# coding=utf-8
 from subprocess import call, DEVNULL, Popen
 from threading import Thread, Event
 from queue import Queue
@@ -178,6 +179,7 @@ class Complier(Daemon):
             pass
         cmd = ['g++', '-o', dst, src]
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
+        print('comile resuilt '+str(self.result))
         if self.result > 0:
             self.result = -2
         elif self.result < 0:
@@ -288,6 +290,7 @@ class Tester(Daemon):
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
             res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
+            # res.setrlimit(res.RLIMIT_DATA,(self.mem,self.mem))
 
             ##os.chroot(CHROOT_PATH)
             os.nice(10)
@@ -328,12 +331,15 @@ class Tester(Daemon):
             bin = ANSWER_PATH + self.id + '/x' + self.id
         else:
             bin = BINARY_PATH + self.id + '/x' + self.id
-
+        # preexec_fn=Tester.Limiter(self.lcpu, self.lmem)()
         p = Popen(bin, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.lcpu, self.lmem),
                   universal_newlines=True, stderr=DEVNULL)
 
         p.wait()
-
+        #
+        self.return_code = p.returncode
+        print(self.return_code)
+        #
         self.result = 0
         if p.returncode == -9:
             self.result = -5
@@ -420,6 +426,9 @@ class Tester(Daemon):
         self.lcpu = cpu
         self.lmem = mem
         self.ua = use_answer
+        #
+        self.return_code = 1024
+        #
         Daemon.__init__(self)
 
     def _run(self):
@@ -471,6 +480,11 @@ class Judger(Daemon):
         from shutil import rmtree
 
         rmtree(BINARY_PATH + self.id)
+        #######
+        print("over")
+        print("test"+str(self.__submit.id)+"  "+str(tlist[0].return_code))
+        self.__submit.return_code = tlist[0].return_code
+        self.__submit.save()
 
 
 Judger.init()
@@ -518,6 +532,7 @@ class Hacker(Daemon):
         if self.ss:
             self.__case.save()
         self.__submit.status = t.result
+        self.__submit.return_code = t.return_code
         self.__submit.save()
 
         if not self.ha:

@@ -120,7 +120,7 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
        'standard': {
-            'format': '%(asctime)s [%(threadName)s:%(thread)d] [%(name)s:%(lineno)d] [%(module)s:%(funcName)s] [%(levelname)s]- %(message)s'}  #日志格式
+            'format': '%(asctime)s [%(threadName)s:%(thread)d] [%(name)s:%(lineno)d] [%(module)s:%(funcName)s] [%(levelname)s]- %(message)s'}
     },
     'filters': {
     },

@@ -5,18 +5,18 @@
 {% block navbar %}{% include "include/navbar.html" %}{% endblock %}
 
 {% block header %}
-<h1>Login</h1>
+<h1>Register</h1>
 {% endblock %}
 
 {% block content %}
 
-<form class="form-horizontal container-fluid" action="/login" method="POST">
+<form class="form-horizontal container-fluid" action="/register/" method="POST">
     {% csrf_token %}
     <div class="row">
         <div class=" col-md-6 col-md-offset-3">
             <div class="form-group">
-                <label>User Name:</label>
-                <input type="text" class="form-control" name="name">
+                <label>Email:</label>
+                <input type="text" class="form-control" name="name" value={{ name }}>
             </div>
         </div>
     </div>
@@ -24,18 +24,19 @@
         <div class=" col-md-6 col-md-offset-3">
             <div class="form-group">
                 <label>Password:</label>
-                <input type="password" class="form-control" name="pw">
+                <input type="password" class="form-control" name="pw1">
             </div>
         </div>
     </div>
     <div class="row">
         <div class=" col-md-6 col-md-offset-3">
             <div class="form-group">
-                <label><input type="checkbox" name="remember">  Remember me</label>
+                <label>Confirm Password:</label>
+                <input type="password" class="form-control" name="pw2">
             </div>
         </div>
     </div>
-    <center><button type="submit" class="btn btn-primary">Login</button></center>
+    <center><button type="submit" class="btn btn-primary">Register</button></center>
 </form>
 
 {% endblock %}

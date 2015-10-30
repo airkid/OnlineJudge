@@ -14,3 +14,8 @@ ac 0
 re -8
 ole -25
 tle -24
+
+#接下来要做的事情
+register page
+status page
+contest system

@@ -179,7 +179,6 @@ class Complier(Daemon):
             pass
         cmd = ['g++', '-o', dst, src]
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
-        print('comile resuilt '+str(self.result))
         if self.result > 0:
             self.result = -2
         elif self.result < 0:
@@ -289,8 +288,11 @@ class Tester(Daemon):
             res.setrlimit(res.RLIMIT_NPROC, (0, 0))
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
+            file = open('/tmp/out','w')
+            print('mem='+str(self.mem),file=file)
+            file.close()
             res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
-            # res.setrlimit(res.RLIMIT_DATA,(self.mem,self.mem))
+            res.setrlimit(res.RLIMIT_DATA,(self.mem,self.mem))
 
             ##os.chroot(CHROOT_PATH)
             os.nice(10)

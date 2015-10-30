@@ -11,6 +11,7 @@ urlpatterns = [
 
     url(r'^$', views.home),
     url(r'^login/$',views.login),
+    url(r'^register/$',views.register),
     url(r'^logout/$',views.logout),
     url(r'^problem/$', views.problem),
     url(r'^problem/([0-9]+)/$',views.problem_detail),

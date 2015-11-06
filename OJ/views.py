@@ -4,10 +4,13 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 
 from django.db.models import Q
-
+import datetime
 from OJ.models import *
 
 import OJ.judge as judge
+
+LIST_NUMBER_EVERY_PAGE = 20
+PAGE_NUMBER_EVERY_PAGE = 7
 
 
 def ren2res(template, req, dict={}):
@@ -89,30 +92,36 @@ def problem(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-        qs = Problem.objects.filter(Q(id__icontains=search) | Q(title__icontains=search)).select_related(
-            "uid__name").filter(uid__contains=search)
+        qs = Problem.objects.filter(visible=True).filter(Q(id__icontains=search) | Q(title__icontains=search))
+        # .select_related("uid__name").filter(uid__contains=search)
     else:
-        qs = Problem.objects.all()
+        qs = Problem.objects.filter(visible=True).all()
 
     max = qs.count() // 20 + 1
 
     if (pg > max):
         raise Http404("no such page")
-    start = pg - 7
+    start = pg - PAGE_NUMBER_EVERY_PAGE
     if start < 1:
         start = 1
-    end = pg + 7
+    end = pg + PAGE_NUMBER_EVERY_PAGE
     if end > max:
         end = max
 
-    lst = qs[(pg - 1) * 20:pg * 20]
+    lst = qs[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
 
     return ren2res("problem.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})
 
 
 def problem_detail(req, pid):
-    smp = TestCase.objects.filter(pid__exact=pid).filter(sample__exact=True)
-    return ren2res("problem/problem_detail.html", req, {'problem': Problem.objects.get(id=pid), 'sample': smp})
+    problem = Problem.objects.get(id=pid)
+    if problem.visible:
+        smp = TestCase.objects.filter(pid__exact=pid).filter(sample__exact=True)
+        return ren2res("problem/problem_detail.html", req, {'problem': problem, 'sample': smp})
+    else:
+        # 此处说明该题目处于比赛状态不可见
+        return HttpResponseRedirect('/')
+
 
 
 @login_required
@@ -133,4 +142,105 @@ def problem_submit(req, pid):
                            {'problem': Problem.objects.get(id=pid), 'err': "No Submit!"})
         f.close()
         judge.Judger(sub)
-        return HttpResponseRedirect("/problem/" + pid + "/")
+        return HttpResponseRedirect("/status/?pid=" + pid + "/")
+
+
+def status(req):
+    pid = req.GET.get('pid')
+    problem = None
+    if pid:
+        problem = Problem.objects.ger(id=pid)
+        query = Submit.objects.filter(pid=problem, cid=-1).all().order_by('-time')
+    else:
+        query = Submit.objects.filter(cid=-1).order_by('-time')
+
+    search = req.GET.get('search')
+    if search:
+        query = query.filter(Q(pid__title__icontains=search) | Q(uid__username__icontains=search))
+
+    pg = req.GET.get('pg')
+    if not pg:
+        pg = 1
+
+    max_cnt = query.count()
+    start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
+    end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
+
+    lst = query[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+
+    return ren2res('status.html', req, {'problem': problem, 'page': range(start, end + 1), 'list': lst})
+
+
+def contest(req):
+    search = req.GET.get('search')
+    if search:
+        query = Contest.objects.filter(Q(name__icontains=search) | Q(uid__username__icontains=search))
+    else:
+        query = Contest.objects.all()
+    pg = req.GET.get('pg')
+    if not pg:
+        pg = 1
+
+    max_cnt = query.count()
+    start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
+    end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
+
+    lst = query[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+
+    return ren2res('contest.html', req, {'page': range(start, end + 1), 'list': lst})
+
+
+def contest_detail(req, cid):
+    contest = Contest.objects.get(id=cid)
+    time = datetime.datetime.now(tz='Asia/Shanghai')
+    if time > contest.start_time:
+        start = True
+    else:
+        start = False
+    if start:
+        problems = contest.get_problem_list()
+        return ren2res("contest/contest_detail.html", req, {'contest': contest, 'problems': problems})
+    else:
+        return ren2res("contest/contest_detail.html", req, {'contest': contest, 'err': "Contest not start yet!"})
+
+
+def contest_status(req, cid):
+    contest = Contest.objects.get(id=cid)
+    submits = contest.get_submits().all().order_by('-time')
+
+    return HttpResponseRedirect("/")
+
+
+def contest_submit(req, cid):
+    contest = Contest.objects.get(id=cid)
+    time = datetime.datetime.now(tz='Asia/Shanghai')
+    if time > contest.start_time + contest.duration_time:
+        finish = True
+    else:
+        finish = False
+    if req.method == 'GET':
+        return ren2res("contest/contest_submit.html", req, {'contest': contest, 'problems': contest.get_problem_list()})
+
+    elif req.method == 'POST':
+        pid = req.POST.get('pid')
+        sub = Submit(pid=Problem.objects.get(id=pid), uid=req.user, lang=req.POST.get('lang'))
+        if not finish:
+            sub.cid = contest.id
+        else:
+            sub.cid = -1
+        sub.save()
+        if req.POST.get('code'):
+            f = open('JudgeFiles/source/' + str(sub.id), 'w')
+            f.write(req.POST.get('code'))
+        elif req.FILES:
+            f = open('JudgeFiles/source/' + str(sub.id), 'wb')
+            f.write(req.FILES['file'].read())
+        else:
+            return ren2res("contest/contest_submit.html", req,
+                           {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
+        f.close()
+        judge.Judger(sub)
+    if not finish:
+        return HttpResponseRedirect("contest/"+cid+"/status/")
+    else:
+        return HttpResponseRedirect("status?pid=/"+pid)

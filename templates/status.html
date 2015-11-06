@@ -1,10 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+{% extends "base_list.html" %}
 
-</body>
-</html>
+{% block title %}Status{% endblock %}
+
+{% block navbar %}{% include "include/navbar-status.html" %}{% endblock %}
+
+{% block list %}
+    <tr>
+        <th>RunID</th>
+        <th>Problem</th>
+        <th>Status</th>
+        <th>Language</th>
+        <th>User</th>
+        <th>SubmitTime</th>
+    </tr>
+    {% for item in list %}
+        <tr>
+            <th>{{ item.id }}</th>
+            <th><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></th>
+            <th>{{ item.get_status_display }}</th>
+            <th>{{ item.get_lang_display }}</th>
+            <th>{{ user.name }}</th>
+            <th>{{ item.time | date:"Y-m-d H:i:s" }}</th>
+        </tr>
+    {% endfor %}
+{% endblock %}

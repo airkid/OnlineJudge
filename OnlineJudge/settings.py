@@ -94,7 +94,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -114,6 +114,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE=2560
 
 LOGIN_URL='/login'
 
+TIME_ZONE = 'Asia/Shanghai'
 
 LOGGING = {
     'version': 1,

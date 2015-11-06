@@ -10,6 +10,7 @@ class UserInfo(models.Model):
     def __str__(self):
         return str(self.id)
 
+
 LANG_CHOICE = (
     (0, 'NONE'),
     (1, 'C'),
@@ -18,28 +19,40 @@ LANG_CHOICE = (
     (4, 'Python'),
     (5, 'Pascal'),
     (6, 'FORTRAN'),
-    )
+)
+
 
 class Problem(models.Model):
     uid = models.ForeignKey(User)
     create_time = models.DateTimeField(auto_now_add=True)
     limit_time = models.PositiveIntegerField(default=1)
-    limit_memory = models.PositiveIntegerField(default=1024*1024*128)
-    answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE,default=0)
+    limit_memory = models.PositiveIntegerField(default=1024 * 1024 * 128)
+    answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE, default=0)
     title = models.CharField(max_length=254)
     content = models.TextField()
     sample_input = models.TextField()
     sample_output = models.TextField()
-    #file_input = models.FileField()
+    # file_input = models.FileField()
     #file_output = models.FileField()
     note = models.TextField(blank=True)
     source = models.TextField(blank=True)
+    # True表示该题目可见， False表示用于比赛，不可见
+    visible = models.BooleanField(default=True)
+
+    def accepted(self):
+        query = Submit.objects.filter(pid=self, status=0)
+        return query.count()
+
+    def submitted(self):
+        query = Submit.objects.filter(pid=self)
+        return query.count()
 
     def __str__(self):
         return str(self.title)
 
     class Meta:
         ordering = ['create_time']
+
 
 class TestCase(models.Model):
     pid = models.ForeignKey(Problem)
@@ -55,8 +68,34 @@ class TestCase(models.Model):
     class Meta:
         ordering = ['time']
 
-class Submit(models.Model):
 
+class Contest(models.Model):
+    uid = models.ForeignKey(User)
+    name = models.CharField(max_length=254)
+    start_time = models.DateTimeField()
+    duration_time = models.DurationField()
+    problems = models.ManyToManyField(Problem, related_name="contests")
+
+    def __str__(self):
+        return str(self.name)
+
+    class Meta:
+        ordering = ['start_time']
+
+    def get_submits(self):
+        return Submit.objects.filter(cid=self.id)
+
+    def get_problem_list(self):
+        problems = self.problems
+        lst = []
+        cnt = 0
+        for problem in problems:
+            cnt += 1
+            lst.append(cnt, chr(ord(cnt + 64)), problem)
+        return lst
+
+
+class Submit(models.Model):
     STATUS_CHOICE = (
         (0, 'Accepted'),
         (1, 'Waiting'),
@@ -79,20 +118,12 @@ class Submit(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
     run_time = models.PositiveSmallIntegerField(null=True)
     run_memory = models.PositiveIntegerField(null=True)
-    return_code = models.IntegerField(null=True);
+    # -1表示非比赛提交, 其余为比赛提交
+    cid = models.IntegerField(default=-1)
+    return_code = models.IntegerField(null=True)
 
     def __str__(self):
-        return str(self.pid)+'  '+str(self.uid)+'  '+str(self.lang)
+        return str(self.pid) + '  ' + str(self.uid) + '  ' + str(self.lang) + '  ' + str(self.contest)
 
     class Meta:
         ordering = ['time']
-
-class Contest(models.Model):
-    uid = models.ForeignKey(User)
-    name = models.CharField(max_length=254)
-    start_time = models.DateTimeField()
-    duration_time = models.DurationField()
-    problems = models.ManyToManyField(Problem, related_name="contests")
-
-    def __str__(self):
-        return str(self.name)

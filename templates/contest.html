@@ -1,10 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+{% extends "base_list.html" %}
 
-</body>
-</html>
+{% block title %}Contest{% endblock %}
+
+{% block navbar %}{% include "include/navbar-contest.html" %}{% endblock %}
+
+{% block list %}
+    <tr>
+        <th>Name</th>
+        <th>StartTime</th>
+        <th>Duration</th>
+        <th>ProblemCounts</th>
+        <th>User</th>
+    </tr>
+    {% for item in list %}
+        <tr>
+            <th><a href="/contest/{{ item.id }}">{{ item.name }}</a></th>
+            <th>{{ item.start_time | date:"Y-m-d H:i:s" }}</th>
+            <th>{{ item.duration_time}}</th>
+            <th>{{ item.problems.count}}</th>
+            <th>{{ item.uid.username}}</th>
+        </tr>
+    {% endfor %}
+{% endblock %}

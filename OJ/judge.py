@@ -157,7 +157,7 @@ class Complier(Daemon):
             os.remove(RESULT_PATH + self.id)
 
     def cxx(self):
-        print("compling cxx")
+        # print("compling cxx")
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id + '.cxx'
         if self.aa:
@@ -184,6 +184,7 @@ class Complier(Daemon):
         elif self.result < 0:
             self.result = -1
         else:
+            self.result = 3
             os.remove(RESULT_PATH + self.id)
 
     def java(self):
@@ -288,11 +289,11 @@ class Tester(Daemon):
             res.setrlimit(res.RLIMIT_NPROC, (0, 0))
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
-            file = open('/tmp/out','w')
-            print('mem='+str(self.mem),file=file)
-            file.close()
+            # file = open('/tmp/out','w')
+            # print('mem='+str(self.mem),file=file)
+            # file.close()
             res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
-            res.setrlimit(res.RLIMIT_DATA,(self.mem,self.mem))
+            # res.setrlimit(res.RLIMIT_DATA,(self.mem,self.mem))
 
             ##os.chroot(CHROOT_PATH)
             os.nice(10)
@@ -327,7 +328,7 @@ class Tester(Daemon):
                 self.result = -7
 
     def cxx(self):
-        print("running cxx")
+        # print("running cxx")
         ofile = TemporaryFile('w+t')
         if self.ua:
             bin = ANSWER_PATH + self.id + '/x' + self.id
@@ -338,9 +339,11 @@ class Tester(Daemon):
                   universal_newlines=True, stderr=DEVNULL)
 
         p.wait()
+        #info=p.read()
+        #print(info)
         #
         self.return_code = p.returncode
-        print(self.return_code)
+        #print(self.return_code)
         #
         self.result = 0
         if p.returncode == -9:
@@ -454,7 +457,9 @@ class Judger(Daemon):
 
     def _run(self):
         c = Complier(self.id, self.lang)
+        self.__submit.status = 1
         c.wait()
+        print(c.result)
         if c.result:
             self.__submit.status = c.result
             self.__submit.save()
@@ -483,8 +488,8 @@ class Judger(Daemon):
 
         rmtree(BINARY_PATH + self.id)
         #######
-        print("over")
-        print("test"+str(self.__submit.id)+"  "+str(tlist[0].return_code))
+        # print("over")
+        # print("test"+str(self.__submit.id)+"  "+str(tlist[0].return_code))
         self.__submit.return_code = tlist[0].return_code
         self.__submit.save()
 

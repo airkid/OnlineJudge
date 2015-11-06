@@ -10,12 +10,16 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^$', views.home),
-    url(r'^login/$',views.login),
-    url(r'^register/$',views.register),
-    url(r'^logout/$',views.logout),
+    url(r'^login/$', views.login),
+    url(r'^register/$', views.register),
+    url(r'^logout/$', views.logout),
     url(r'^problem/$', views.problem),
-    url(r'^problem/([0-9]+)/$',views.problem_detail),
-    url(r'^problem/([0-9]+)/submit/$',views.problem_submit),
-
+    url(r'^problem/([0-9]+)/$', views.problem_detail),
+    url(r'^problem/([0-9]+)/submit/$', views.problem_submit),
+    url(r'^status/$', views.status),
+    url(r'^contest/$', views.contest),
+    url(r'^contest/([0-9]+)/$', views.contest_detail),
+    url(r'^contest/([0-9]+)/status/$', views.contest_status),
+    url(r'^contest/([0-9]+)/submit/$/', views.contest_submit),
     url(r'^admin/', include(admin.site.urls)),
 ]

@@ -21,9 +21,9 @@
 <tr>
     <th>{{ item.id }}</th>
     <th><a href="/problem/{{ item.id }}">{{ item.title }}</a></th>
-    <th><a href="/problem/{{ item.id }}/status">{{ item.acceptted }}/{{ item.submitted }}</a></th>
+    <th><a href="/status?pid={{ item.id }}">{{ item.accepted }}/{{ item.submitted }}</a></th>
     <th>{{ item.uid }}</th>
-    <th>{{ item.time }}</th>
+    <th>{{ item.create_time | date:"Y-m-d" }}</th>
 </tr>
 {% endfor %}
 {% endblock %}

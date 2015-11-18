@@ -141,7 +141,7 @@ def problem_submit(req, pid):
             return ren2res("problem/problem_submit.html", req,
                            {'problem': Problem.objects.get(id=pid), 'err': "No Submit!"})
         f.close()
-        judge.Judger(sub)
+        judge.Judger(sub, False)
         return HttpResponseRedirect("/status/?pid=" + pid + "/")
 
 

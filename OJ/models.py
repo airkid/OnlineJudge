@@ -38,6 +38,8 @@ class Problem(models.Model):
     source = models.TextField(blank=True)
     # True表示该题目可见， False表示用于比赛，不可见
     visible = models.BooleanField(default=True)
+    # CCF题目专用
+    isCCF = models.BooleanField(default=False)
 
     def accepted(self):
         query = Submit.objects.filter(pid=self, status=0)
@@ -61,6 +63,8 @@ class TestCase(models.Model):
     sample = models.BooleanField(default=False)
     input = models.TextField()
     output = models.TextField()
+    # CCF专用
+    score = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.pid)
@@ -121,9 +125,12 @@ class Submit(models.Model):
     # -1表示非比赛提交, 其余为比赛提交
     cid = models.IntegerField(default=-1)
     return_code = models.IntegerField(null=True)
+    # CCF题目专用
+    score = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.pid) + '  ' + str(self.uid) + '  ' + str(self.lang) + '  ' + str(self.contest)
 
     class Meta:
         ordering = ['time']
+

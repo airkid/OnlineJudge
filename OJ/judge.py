@@ -445,9 +445,9 @@ Tester.init()
 
 
 class Judger(Daemon):
-    def __init__(self, submit):
+    def __init__(self, submit, isCCF=False):
         self.__submit = submit
-
+        self.isCCF = isCCF
         prob = submit.pid
         self.id = str(submit.id)
         self.lang = int(submit.lang)
@@ -479,6 +479,8 @@ class Judger(Daemon):
                 over = True
                 self.__submit.status = t.result
                 self.__submit.save()
+            else:
+                self.__submit.score += t.score
 
         if not over:
             self.__submit.status = 0

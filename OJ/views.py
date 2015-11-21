@@ -1,12 +1,12 @@
-from django.template import RequestContext
 from django.shortcuts import render_to_response, Http404, HttpResponseRedirect
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-
+from django.template import Context, RequestContext, loader
+from django.http import HttpResponse
 from django.db.models import Q
 import datetime
 from OJ.models import *
-
+import pytz
 import OJ.judge as judge
 
 LIST_NUMBER_EVERY_PAGE = 20
@@ -66,6 +66,8 @@ def register(req):
             return ren2res('register.html', req, {'err': "This email has been registered ! Try another"})
         else:
             pw1 = req.POST.get('pw1')
+            if pw1 == "":
+                return ren2res('register.html', req, {'err': "Password can't be null", 'name': name})
             pw2 = req.POST.get('pw2')
             if pw1 != pw2:
                 return ren2res('register.html', req, {'err': "Password not consistent", 'name': name})
@@ -121,7 +123,6 @@ def problem_detail(req, pid):
     else:
         # 此处说明该题目处于比赛状态不可见
         return HttpResponseRedirect('/')
-
 
 
 @login_required
@@ -192,28 +193,38 @@ def contest(req):
 
 def contest_detail(req, cid):
     contest = Contest.objects.get(id=cid)
-    time = datetime.datetime.now(tz='Asia/Shanghai')
+    time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
     if time > contest.start_time:
         start = True
     else:
         start = False
     if start:
         problems = contest.get_problem_list()
-        return ren2res("contest/contest_detail.html", req, {'contest': contest, 'problems': problems})
+        return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems})
     else:
-        return ren2res("contest/contest_detail.html", req, {'contest': contest, 'err': "Contest not start yet!"})
+        return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Contest not start yet!"})
+
+
+def contest_get_problem(req, cid):
+    if req.is_ajax():
+        pid = req.GET.get('pid')
+        t = loader.get_template('./contest/contest_problem.html')
+        problem = Problem.objects.get(id=pid)
+        content_html = t.render(Context({'problem': problem}))
+        return HttpResponse(content_html)
 
 
 def contest_status(req, cid):
-    contest = Contest.objects.get(id=cid)
-    submits = contest.get_submits().all().order_by('-time')
-
-    return HttpResponseRedirect("/")
+    if req.is_ajax():
+        t = loader.get_template('./contest/contest_status.html')
+        status_list = Submit.objects.filter(cid=cid)
+        content_html = t.render(Context({'status_list': status_list}))
+        return HttpResponse(content_html)
 
 
 def contest_submit(req, cid):
     contest = Contest.objects.get(id=cid)
-    time = datetime.datetime.now(tz='Asia/Shanghai')
+    time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
     if time > contest.start_time + contest.duration_time:
         finish = True
     else:
@@ -240,7 +251,8 @@ def contest_submit(req, cid):
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
         f.close()
         judge.Judger(sub)
+    # return ren2res()
     if not finish:
-        return HttpResponseRedirect("contest/"+cid+"/status/")
+        return HttpResponseRedirect("/contest/" + cid + "/")
     else:
-        return HttpResponseRedirect("status?pid=/"+pid)
+        return HttpResponseRedirect("/contest/"+cid+"/status?pid=" + pid)

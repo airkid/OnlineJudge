@@ -157,7 +157,7 @@ class Complier(Daemon):
             os.remove(RESULT_PATH + self.id)
 
     def cxx(self):
-        # print("compling cxx")
+        print("compling cxx")
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id + '.cxx'
         if self.aa:
@@ -184,7 +184,8 @@ class Complier(Daemon):
         elif self.result < 0:
             self.result = -1
         else:
-            self.result = 3
+            # 我脑残在上个版本+了这么句话卡死了，谢谢git
+            # self.result = 3
             os.remove(RESULT_PATH + self.id)
 
     def java(self):
@@ -328,7 +329,7 @@ class Tester(Daemon):
                 self.result = -7
 
     def cxx(self):
-        # print("running cxx")
+        print("running cxx")
         ofile = TemporaryFile('w+t')
         if self.ua:
             bin = ANSWER_PATH + self.id + '/x' + self.id
@@ -459,18 +460,18 @@ class Judger(Daemon):
         c = Complier(self.id, self.lang)
         self.__submit.status = 1
         c.wait()
-        print(c.result)
         if c.result:
+            # print("result is"+str(c.result))
             self.__submit.status = c.result
             self.__submit.save()
             return
 
         tlist = []
         for case in TestCase.objects.filter(pid__exact=self.__submit.pid):
-            tlist.append(Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem))
+            tlist.append([Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem),case.score])
 
         over = False
-        for t in tlist:
+        for t, score in tlist:
             if over:
                 t.cancel()
                 continue
@@ -480,7 +481,7 @@ class Judger(Daemon):
                 self.__submit.status = t.result
                 self.__submit.save()
             else:
-                self.__submit.score += t.score
+                self.__submit.score += score
 
         if not over:
             self.__submit.status = 0

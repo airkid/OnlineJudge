@@ -1,0 +1,26 @@
+
+</br>
+<table class="table">
+    <thead>
+          <tr>
+            <th>RunID</th>
+            <th>Problem</th>
+            <th>Status</th>
+            <th>Language</th>
+            <th>User</th>
+            <th>SubmitTime</th>
+         </tr>
+    </thead>
+    <tbody>
+    {% for item in status_list %}
+        <tr>
+            <th>{{ item.id }}</th>
+            <th>{{ item.pid.title }}</th>
+            <th>{{ item.get_status_display }}</th>
+            <th>{{ item.get_lang_display }}</th>
+            <th>{{ item.uid.username }}</th>
+            <th>{{ item.time | date:"Y-m-d H:i:s" }}</th>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

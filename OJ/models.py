@@ -90,12 +90,12 @@ class Contest(models.Model):
         return Submit.objects.filter(cid=self.id)
 
     def get_problem_list(self):
-        problems = self.problems
+        problems = self.problems.all()
         lst = []
         cnt = 0
         for problem in problems:
+            lst.append([cnt, chr(cnt + 65), problem])
             cnt += 1
-            lst.append(cnt, chr(ord(cnt + 64)), problem)
         return lst
 
 
@@ -129,7 +129,7 @@ class Submit(models.Model):
     score = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.pid) + '  ' + str(self.uid) + '  ' + str(self.lang) + '  ' + str(self.contest)
+        return str(self.pid) + '  ' + str(self.uid) + '  ' + str(self.lang) + '  ' + str(self.cid)
 
     class Meta:
         ordering = ['time']

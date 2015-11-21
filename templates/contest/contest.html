@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contest.name }}{% endblock %}
+
+{% block navbar %}{% include "include/navbar-contest.html" %}{% endblock %}
+
+{% block header %}
+
+    <h1 class="text-center">{{ contest.name }}</h1>
+    <ul class="text-center" style="list-style:none;">
+        <li>Start Time: {{ contest.start_time }} &nbsp;&nbsp;Duration Time: {{ contest.duration_time }}</li>
+        <li>Contest type: Private &nbsp;&nbsp;Contest Status: running</li>
+        <li>Current Time: 2015-11-18 13:00:00</li>
+    </ul>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="tabbable" id="contest_content">
+        <ul class="nav nav-tabs">
+            <li class="active">
+                <a data-toggle="tab" href="#panel-overview" id="overview">Overview</a>
+            </li>
+            <li id="Contest_Problem">
+                <a data-toggle="tab" href="#panel-problem" id="problem_detail">Problem</a>
+            </li>
+            <li>
+                <a data-toggle="tab" href="#panel-status" id="get_status">Status</a>
+            </li>
+            <li>
+                <a data-toggle="tab" href="#panel-submit">Submit</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="panel-overview">
+                {% include "contest/contest_overview.html" %}
+            </div>
+            <div class="tab-pane" id="panel-problem">
+                {% include "contest/contest_problem.html" %}
+            </div>
+            <div class="tab-pane" id="panel-status">
+                {#                        {% include "contest/contest_status.html" %}#}
+            </div>
+            <div class="tab-pane" id="panel-submit">
+                {% include "contest/contest_submit.html" %}
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#get_status').click(function () {
+                //alert("Hello!");
+                contest_id = {{contest.id}};
+                $.ajax({
+                    type: 'post',
+                    url: "/contest/" + contest_id + "/status/",
+                    success: function (responseData) {
+                        $('#panel-status').html(responseData);
+                    }
+                })
+            })
+            $('#submit_button').click(function(){
+                $('#submit_form').ajaxForm(
+                $.ajax({
+                    type: 'post',
+                    url: "/contest/" + {{ contest.id }} + "/status/",
+                    success: function (responseData) {
+                        $('#panel-status').html(responseData);
+                        $('#overview').tab('show');
+                    }
+                })
+            )
+            })
+            $('#overview').tab('show');
+        })
+    </script>
+{% endblock %}

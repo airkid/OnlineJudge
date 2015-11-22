@@ -150,7 +150,7 @@ def status(req):
     pid = req.GET.get('pid')
     problem = None
     if pid:
-        problem = Problem.objects.ger(id=pid)
+        problem = Problem.objects.get(id=pid)
         query = Submit.objects.filter(pid=problem, cid=-1).all().order_by('-time')
     else:
         query = Submit.objects.filter(cid=-1).order_by('-time')

@@ -157,7 +157,7 @@ class Complier(Daemon):
             os.remove(RESULT_PATH + self.id)
 
     def cxx(self):
-        print("compling cxx")
+        # print("compling cxx")
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id + '.cxx'
         if self.aa:
@@ -324,12 +324,13 @@ class Tester(Daemon):
             self.result = -3
         else:
             ofile.seek(0)
-            if self.output != ofile.read(-1):
-                # wrong answer
+            ofile_string = str(ofile.read(-1)).strip()
+            output_string = self.output.strip()
+            if ofile_string != output_string:
                 self.result = -7
 
     def cxx(self):
-        print("running cxx")
+        #print("running cxx")
         ofile = TemporaryFile('w+t')
         if self.ua:
             bin = ANSWER_PATH + self.id + '/x' + self.id
@@ -357,7 +358,9 @@ class Tester(Daemon):
             self.result = -3
         else:
             ofile.seek(0)
-            if self.output != ofile.read(-1):
+            ofile_string = str(ofile.read(-1)).strip()
+            output_string = self.output.strip()
+            if ofile_string != output_string:
                 self.result = -7
 
 
@@ -383,7 +386,9 @@ class Tester(Daemon):
             self.result = -3
         else:
             ofile.seek(0)
-            if self.output != ofile.read(-1):
+            ofile_string = str(ofile.read(-1)).strip()
+            output_string = self.output.strip()
+            if ofile_string != output_string:
                 self.result = -7
 
     def pyc(self):
@@ -409,7 +414,9 @@ class Tester(Daemon):
         else:
             # 文件定位到开头
             ofile.seek(0)
-            if self.output != ofile.read(-1):
+            ofile_string = str(ofile.read(-1)).strip()
+            output_string = self.output.strip()
+            if ofile_string != output_string:
                 self.result = -7
 
         pass
@@ -478,6 +485,7 @@ class Judger(Daemon):
             t.wait()
             if t.result:
                 over = True
+                print(t.result)
                 self.__submit.status = t.result
                 self.__submit.save()
             else:
@@ -486,6 +494,7 @@ class Judger(Daemon):
         if not over:
             self.__submit.status = 0
             self.__submit.save()
+        # print('over')
         # 递归删除二进制目录
         from shutil import rmtree
 
@@ -493,7 +502,6 @@ class Judger(Daemon):
         #######
         # print("over")
         # print("test"+str(self.__submit.id)+"  "+str(tlist[0].return_code))
-        self.__submit.return_code = tlist[0].return_code
         self.__submit.save()
 
 

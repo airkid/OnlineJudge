@@ -51,6 +51,10 @@ class Problem(models.Model):
         query = Submit.objects.filter(pid=self)
         return query.count()
 
+    def samples(self):
+        query = TestCase.objects.filter(pid=self, sample=True)
+        return query
+
     def __str__(self):
         return str(self.title)
 
@@ -69,7 +73,7 @@ class TestCase(models.Model):
     score = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.pid)
+        return ('Sample ' if self.sample else '')+str(self.pid)
 
     class Meta:
         ordering = ['time']

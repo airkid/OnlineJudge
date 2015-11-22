@@ -1,26 +1,25 @@
 {% extends "problem/problem_base.html" %}
 
 {% block detail %}
-<h3>Description</h3>
-<pre>{{ problem.content }}</pre>
+    <h3>Description</h3>
+    <pre>{{ problem.content }}</pre>
 
-<h3>Description</h3>
-<pre>{{ problem.content }}</pre>
+    <h3>Input</h3>
+    <pre>{{ problem.input }}</pre>
 
-<h3>Sample Input</h3>
-<pre>{{ problem.sample_input }}</pre>
+    <h3>Output</h3>
+    <pre>{{ problem.output }}</pre>
 
-<h3>Sample Output</h3>
-<pre>{{ problem.sample_output }}</pre>
+    <h3>Sample Input</h3>
+    <pre>{{ problem.sample_input }}</pre>
 
-{% if note %}
-<h3>Note</h3>
-<pre>{{ problem.note }}</pre>
-{% endif %}
+    <h3>Sample Output</h3>
+    <pre>{{ problem.sample_output }}</pre>
 
-{% if source %}
-<h3>Source</h3>
-<pre>{{ problem.source }}</pre>
-{% endif %}
+    <h3>Note</h3>
+    <pre>{{ problem.note }}</pre>
+
+    <h3>Source</h3>
+    <pre>{{ problem.source }}</pre>
 
 {% endblock %}

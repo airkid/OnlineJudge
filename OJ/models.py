@@ -30,6 +30,8 @@ class Problem(models.Model):
     answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE, default=0)
     title = models.CharField(max_length=254)
     content = models.TextField()
+    input = models.TextField(default='')
+    output = models.TextField(default='')
     sample_input = models.TextField()
     sample_output = models.TextField()
     # file_input = models.FileField()

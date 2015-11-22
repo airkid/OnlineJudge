@@ -19,7 +19,7 @@
             <th><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></th>
             <th>{{ item.get_status_display }}</th>
             <th>{{ item.get_lang_display }}</th>
-            <th>{{ item.user.name }}</th>
+            <th>{{ item.uid.username }}</th>
             <th>{{ item.time | date:"Y-m-d H:i:s" }}</th>
         </tr>
     {% endfor %}

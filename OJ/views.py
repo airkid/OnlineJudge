@@ -143,7 +143,7 @@ def problem_submit(req, pid):
                            {'problem': Problem.objects.get(id=pid), 'err': "No Submit!"})
         f.close()
         judge.Judger(sub, False)
-        return HttpResponseRedirect("/status/?pid=" + pid + "/")
+        return HttpResponseRedirect("/status/?pid=" + pid)
 
 
 def status(req):
@@ -221,7 +221,7 @@ def contest_get_problem(req, cid):
 def contest_status(req, cid):
     if req.is_ajax():
         t = loader.get_template('./contest/contest_status.html')
-        status_list = Submit.objects.filter(cid=cid)
+        status_list = Submit.objects.filter(cid=cid).order_by('-time')
         content_html = t.render(Context({'status_list': status_list}))
         return HttpResponse(content_html)
 
@@ -255,7 +255,6 @@ def contest_submit(req, cid):
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
         f.close()
         judge.Judger(sub)
-    # return ren2res()
     if not finish:
         return HttpResponseRedirect("/contest/" + cid + "/")
     else:

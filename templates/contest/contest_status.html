@@ -25,7 +25,11 @@
          >
             <td>{{ item.id }}</td>
             <td>{{ item.pid.title }}</td>
-            <td>{{ item.get_status_display }}</td>
+            {% ifequal item.pid.isCCF True %}
+                 <td>{{ item.score }}</td>
+                {% else %}
+                <td>{{ item.get_status_display }}</td>
+            {% endifequal %}
             <td>{{ item.get_lang_display }}</td>
             <td>{{ item.uid.username }}</td>
             <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>

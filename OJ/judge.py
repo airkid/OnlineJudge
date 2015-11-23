@@ -189,6 +189,7 @@ class Complier(Daemon):
             os.remove(RESULT_PATH + self.id)
 
     def java(self):
+        print('compiling java')
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id
         try:
@@ -365,6 +366,7 @@ class Tester(Daemon):
 
 
     def java(self):
+        print('running java')
         ofile = TemporaryFile('w+t')
         if self.ua:
             dst = ANSWER_PATH + self.id
@@ -388,8 +390,10 @@ class Tester(Daemon):
             ofile.seek(0)
             ofile_string = str(ofile.read(-1)).strip()
             output_string = self.output.strip()
+            print(output_string+' '+ofile_string)
             if ofile_string != output_string:
                 self.result = -7
+        print('result: '+str(self.result))
 
     def pyc(self):
         ofile = TemporaryFile('w+t')
@@ -485,7 +489,6 @@ class Judger(Daemon):
             t.wait()
             if t.result:
                 over = True
-                print(t.result)
                 self.__submit.status = t.result
                 self.__submit.save()
             else:
@@ -543,6 +546,7 @@ class Hacker(Daemon):
             return
         t = Tester(self.id, self.lang, self.input, self.output, self.lcpu, self.lmem)
         t.wait()
+        print(t.result)
         if t.result == 0:
             self.result = 3
             return

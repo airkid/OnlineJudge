@@ -292,6 +292,7 @@ class Tester(Daemon):
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
             if self.mem != -1:
+                print('setmem')
                 res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
             ##os.chroot(CHROOT_PATH)
             os.nice(10)

@@ -288,7 +288,7 @@ class Tester(Daemon):
             res.setrlimit(res.RLIMIT_CORE, (0, 0))
             res.setrlimit(res.RLIMIT_MEMLOCK, (0, 0))
             res.setrlimit(res.RLIMIT_MSGQUEUE,(0,0))
-            res.setrlimit(res.RLIMIT_NPROC, (0, 0))
+            #res.setrlimit(res.RLIMIT_NPROC, (0, 0))
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
             if self.mem != -1:
@@ -369,9 +369,9 @@ class Tester(Daemon):
             dst = ANSWER_PATH + self.id
         else:
             dst = BINARY_PATH + self.id
-        cmd = ['java', '-cp', dst, 'Main']
-        p = Popen(cmd, stdin=self.ifile, stdout=ofile, universal_newlines=True,
-                  preexec_fn=Tester.Limiter(self.lcpu, -1), stderr=DEVNULL)
+        cmd = ['java', '-XX:MaxHeapSize=512m','-cp', dst, 'Main']
+         
+        p = Popen(cmd, stdin=self.ifile, stdout=ofile,  preexec_fn=Tester.Limiter(self.lcpu, -1),universal_newlines=True,stderr=DEVNULL)
         p.wait()
 
         self.result = 0

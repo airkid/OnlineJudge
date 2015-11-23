@@ -65,3 +65,6 @@ target/
 
 #Judge Output
 JudgeFiles/
+
+myout.file
+*~

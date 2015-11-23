@@ -6,7 +6,7 @@
 
 {% block header %}
 
-    <h1 class="text-center">{{ contest.name }}</h1>
+    <h1 class="text-center text-info">{{ contest.name }}</h1>
     <ul class="text-center" style="list-style:none;">
         <li>Start Time: {{ contest.start_time }} &nbsp;&nbsp;Duration Time: {{ contest.duration_time }}</li>
         <li>Contest type: Private &nbsp;&nbsp;Contest Status: running</li>
@@ -40,7 +40,7 @@
                 {% include "contest/contest_problem.html" %}
             </div>
             <div class="tab-pane" id="panel-status">
-                {#                        {% include "contest/contest_status.html" %}#}
+                {% include "contest/contest_status.html" %}
             </div>
             <div class="tab-pane" id="panel-submit">
                 {% include "contest/contest_submit.html" %}

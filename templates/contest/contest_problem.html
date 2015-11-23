@@ -1,5 +1,5 @@
 <div class="text-center">
-    <h1>{{ problem.title }}</h1>
+    <h1 class="text-success">{{ problem.title }}</h1>
     <ul class="list-inline">
         <li>Time Limit: {{ problem.limit_time }}s</li>
         &nbsp;&nbsp;
@@ -7,27 +7,27 @@
     </ul>
 </div>
 
-<h3>Description</h3>
+<h3 class="text-info" >Description</h3>
 <pre>{{ problem.content }}</pre>
 
-<h3>Input</h3>
+<h3 class="text-info" >Input</h3>
 <pre>{{ problem.input }}</pre>
 
-<h3>Output</h3>
+<h3 class="text-info" >Output</h3>
 <pre>{{ problem.output }}</pre>
 
 {% if problem.samples %}
     {% for s in problem.samples %}
-        <h3>Sample Input {{ forloop.counter }}</h3>
+        <h3 class="text-info" >Sample Input {{ forloop.counter }}</h3>
         <pre>{{ s.input }}</pre>
 
-        <h3>Sample Output {{ forloop.counter }}</h3>
+        <h3 class="text-info" >Sample Output {{ forloop.counter }}</h3>
         <pre>{{ s.output }}</pre>
     {% endfor %}
 {% endif %}
 
-<h3>Note</h3>
+<h3 class="text-info" >Note</h3>
 <pre>{{ problem.note }}</pre>
 
-<h3>Source</h3>
+<h3 class="text-info" >Source</h3>
 <pre>{{ problem.source }}</pre>

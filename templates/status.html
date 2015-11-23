@@ -1,4 +1,4 @@
-{% extends "base_list.html" %}
+{% extends "status/status_list.html" %}
 
 {% block title %}Status{% endblock %}
 
@@ -14,13 +14,22 @@
         <th>SubmitTime</th>
     </tr>
     {% for item in list %}
-        <tr>
-            <th>{{ item.id }}</th>
-            <th><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></th>
-            <th>{{ item.get_status_display }}</th>
-            <th>{{ item.get_lang_display }}</th>
-            <th>{{ item.uid.username }}</th>
-            <th>{{ item.time | date:"Y-m-d H:i:s" }}</th>
+        <tr
+                {% ifequal item.status 1 %}
+                    class="info"
+                {% endifequal %}
+                {% ifequal item.status 0 %}
+                    class="success"
+                {% else %}
+                    class="danger"
+                {% endifequal %}
+         >
+            <td>{{ item.id }}</td>
+            <td><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></td>
+            <td>{{ item.get_status_display }}</td>
+            <td>{{ item.get_lang_display }}</td>
+            <td>{{ item.uid.username }}</td>
+            <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>
         </tr>
     {% endfor %}
 {% endblock %}

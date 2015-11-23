@@ -159,15 +159,19 @@ def status(req):
     if search:
         query = query.filter(Q(pid__title__icontains=search) | Q(uid__username__icontains=search))
 
+    #print(len(query))
+
     pg = req.GET.get('pg')
     if not pg:
         pg = 1
+    pg = int(pg)
 
-    max_cnt = query.count()
+    max_cnt = query.count() // 20 + 1
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
     end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
 
     lst = query[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+    #print(len(lst))
 
     return ren2res('status.html', req, {'problem': problem, 'page': range(start, end + 1), 'list': lst})
 
@@ -200,7 +204,7 @@ def contest_detail(req, cid):
         start = False
     if start:
         problems = contest.get_problem_list()
-        return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems})
+        return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems, 'problem': problems[0][2]})
     else:
         return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Contest not start yet!"})
 

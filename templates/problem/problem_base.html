@@ -5,11 +5,13 @@
 {% block navbar %}{% include "include/navbar-problem.html" %}{% endblock %}
 
 {% block header %}
-<h1>{{ problem.title }}</h1>
-<ul class="list-inline">
-    <li>Time Limit: {{ problem.limit_time }}s</li>
-    <li>Memory Limit: {{problem.limit_memory|filesizeformat}}</li>
-</ul>
+    <div class="text-center">
+        <h1 class="text-success">{{ problem.title }}</h1>
+        <ul class="list-inline">
+            <li>Time Limit: {{ problem.limit_time }}s</li>
+            <li>Memory Limit: {{problem.limit_memory|filesizeformat}}</li>
+        </ul>
+    </div>
 {% endblock %}
 
 {% block content %}

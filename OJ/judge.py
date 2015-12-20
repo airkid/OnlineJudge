@@ -287,12 +287,12 @@ class Tester(Daemon):
 
             res.setrlimit(res.RLIMIT_CORE, (0, 0))
             res.setrlimit(res.RLIMIT_MEMLOCK, (0, 0))
-            res.setrlimit(res.RLIMIT_MSGQUEUE,(0,0))
-            #res.setrlimit(res.RLIMIT_NPROC, (0, 0))
+            # res.setrlimit(res.RLIMIT_MSGQUEUE,(0,0))
+            # res.setrlimit(res.RLIMIT_NPROC, (0, 0))
             res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
             res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
             if self.mem != -1:
-                print('setmem')
+                # print('setmem')
                 res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
             ##os.chroot(CHROOT_PATH)
             os.nice(10)
@@ -358,6 +358,7 @@ class Tester(Daemon):
             ofile.seek(0)
             ofile_string = str(ofile.read(-1)).strip()
             output_string = self.output.strip()
+            print(ofile_string+'  '+output_string)
             if ofile_string != output_string:
                 self.result = -7
 
@@ -387,10 +388,10 @@ class Tester(Daemon):
             ofile.seek(0)
             ofile_string = str(ofile.read(-1)).strip()
             output_string = self.output.strip()
-            print(output_string+' '+ofile_string)
+            # print(output_string+' '+ofile_string)
             if ofile_string != output_string:
                 self.result = -7
-        print('result: '+str(self.result))
+        # print('result: '+str(self.result))
 
     def pyc(self):
         ofile = TemporaryFile('w+t')
@@ -476,7 +477,8 @@ class Judger(Daemon):
 
         tlist = []
         for case in TestCase.objects.filter(pid__exact=self.__submit.pid):
-            tlist.append([Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem),case.score])
+            if not case.sample:
+                tlist.append([Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem),case.score])
 
         over = False
         for t, score in tlist:

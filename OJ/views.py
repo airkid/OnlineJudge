@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.template import Context, RequestContext, loader
 from django.http import HttpResponse
 from django.db.models import Q
+from django.core.files.base import ContentFile
 import datetime
 from OJ.models import *
 import pytz
@@ -133,15 +134,19 @@ def problem_submit(req, pid):
         sub = Submit(pid=Problem.objects.get(id=pid), uid=req.user, lang=req.POST.get('lang'))
         sub.save()
         if req.POST.get('code'):
-            f = open('JudgeFiles/source/' + str(sub.id), 'w')
-            f.write(req.POST.get('code'))
+            # f = open('JudgeFiles/source/' + str(sub.id), 'w')
+            # f.write(req.POST.get('code'))
+            content_file = ContentFile(req.POST.get('code'))
         elif req.FILES:
-            f = open('JudgeFiles/source/' + str(sub.id), 'wb')
-            f.write(req.FILES['file'].read())
+            # f = open('JudgeFiles/source/' + str(sub.id), 'wb')
+            # f.write(req.FILES['file'].read())
+            content_file = ContentFile(req.FILES['file'].read())
         else:
             return ren2res("problem/problem_submit.html", req,
                            {'problem': Problem.objects.get(id=pid), 'err': "No Submit!"})
-        f.close()
+        # f.close()
+        sub.source_code.save(name=str(sub.id), content=content_file)
+        sub.save()
         judge.Judger(sub, False)
         return HttpResponseRedirect("/status/?pid=" + pid)
 
@@ -195,6 +200,7 @@ def contest(req):
     return ren2res('contest.html', req, {'page': range(start, end + 1), 'list': lst})
 
 
+@login_required
 def contest_detail(req, cid):
     contest = Contest.objects.get(id=cid)
     time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
@@ -209,6 +215,7 @@ def contest_detail(req, cid):
         return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Contest not start yet!"})
 
 
+@login_required
 def contest_get_problem(req, cid):
     if req.is_ajax():
         pid = req.GET.get('pid')
@@ -218,6 +225,7 @@ def contest_get_problem(req, cid):
         return HttpResponse(content_html)
 
 
+@login_required
 def contest_status(req, cid):
     if req.is_ajax():
         t = loader.get_template('./contest/contest_status.html')
@@ -226,6 +234,7 @@ def contest_status(req, cid):
         return HttpResponse(content_html)
 
 
+@login_required
 def contest_submit(req, cid):
     contest = Contest.objects.get(id=cid)
     time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
@@ -245,15 +254,14 @@ def contest_submit(req, cid):
             sub.cid = -1
         sub.save()
         if req.POST.get('code'):
-            f = open('JudgeFiles/source/' + str(sub.id), 'w')
-            f.write(req.POST.get('code'))
+            content_file = ContentFile(req.POST.get('code'))
         elif req.FILES:
-            f = open('JudgeFiles/source/' + str(sub.id), 'wb')
-            f.write(req.FILES['file'].read())
+            content_file = ContentFile(req.FILES['file'].read())
         else:
             return ren2res("contest/contest_submit.html", req,
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
-        f.close()
+        sub.source_code.save(name=str(sub.id), content=content_file)
+        sub.save()
         judge.Judger(sub)
     if not finish:
         return HttpResponseRedirect("/contest/" + cid + "/")

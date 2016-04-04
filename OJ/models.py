@@ -16,9 +16,9 @@ LANG_CHOICE = (
     (1, 'C'),
     (2, 'C++'),
     (3, 'Java'),
-    (4, 'Python'),
-    (5, 'Pascal'),
-    (6, 'FORTRAN'),
+    # (4, 'Python'),
+    # (5, 'Pascal'),
+    # (6, 'FORTRAN'),
 )
 
 
@@ -126,8 +126,8 @@ class Submit(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE)
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
-    run_time = models.PositiveSmallIntegerField(null=True)
-    run_memory = models.PositiveIntegerField(null=True)
+    run_time = models.PositiveSmallIntegerField(null=True, default=0)
+    run_memory = models.PositiveIntegerField(null=True, default=0)
     source_code = models.FileField(default=None, upload_to='JudgeFiles/source/')
     # -1表示非比赛提交, 其余为比赛提交
     cid = models.IntegerField(default=-1)

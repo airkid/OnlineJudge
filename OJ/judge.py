@@ -193,7 +193,7 @@ class Complier(Daemon):
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id
         try:
-            os.mkdir(src);
+            os.mkdir(src)
         except:
             pass
         src += '/Main.java'
@@ -343,7 +343,7 @@ class Tester(Daemon):
         #print(info)
         #
         self.return_code = p.returncode
-        #print(self.return_code)
+        print(self.return_code)
         #
         self.result = 0
         if p.returncode == -9:
@@ -371,7 +371,7 @@ class Tester(Daemon):
         else:
             dst = BINARY_PATH + self.id
         cmd = ['java', '-XX:MaxHeapSize=512m','-cp', dst, 'Main']
-         
+
         p = Popen(cmd, stdin=self.ifile, stdout=ofile,  preexec_fn=Tester.Limiter(self.lcpu, -1),universal_newlines=True,stderr=DEVNULL)
         p.wait()
 

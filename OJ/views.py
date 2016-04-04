@@ -9,6 +9,7 @@ import datetime
 from OJ.models import *
 import pytz
 import OJ.judge as judge
+import OJ.judger as judger
 
 LIST_NUMBER_EVERY_PAGE = 20
 PAGE_NUMBER_EVERY_PAGE = 7
@@ -147,7 +148,7 @@ def problem_submit(req, pid):
         # f.close()
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
-        judge.Judger(sub, False)
+        judger.Judger(sub)
         return HttpResponseRedirect("/status/?pid=" + pid)
 
 

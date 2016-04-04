@@ -68,3 +68,7 @@ JudgeFiles/
 
 myout.file
 *~
+
+
+# no hup
+nohup.out

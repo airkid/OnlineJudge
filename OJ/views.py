@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render_to_response, Http404, HttpResponseRedirect
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
@@ -96,10 +97,10 @@ def problem(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-        qs = Problem.objects.filter(visible=True).filter(Q(id__icontains=search) | Q(title__icontains=search))
+        qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).filter(Q(id__icontains=search) | Q(title__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
-        qs = Problem.objects.filter(visible=True).all()
+        qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).all()
 
     max = qs.count() // 20 + 1
 
@@ -119,7 +120,7 @@ def problem(req):
 
 def problem_detail(req, pid):
     problem = Problem.objects.get(id=pid)
-    if problem.visible:
+    if problem.visible and problem.numberOfContest == 0:
         smp = TestCase.objects.filter(pid__exact=pid).filter(sample__exact=True)
         return ren2res("problem/problem_detail.html", req, {'problem': problem, 'sample': smp})
     else:
@@ -268,3 +269,6 @@ def contest_submit(req, cid):
         return HttpResponseRedirect("/contest/" + cid + "/")
     else:
         return HttpResponseRedirect("/contest/"+cid+"/status?pid=" + pid)
+
+def page_not_found(req):
+    return ren2res("404.html", req, {})

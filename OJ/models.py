@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
 
 # Create your models here.
+
 
 class UserInfo(models.Model):
     id = models.OneToOneField(User, primary_key=True, related_name='info')
@@ -27,7 +29,7 @@ class Problem(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     limit_time = models.PositiveIntegerField(default=1)
     limit_memory = models.PositiveIntegerField(default=1024 * 1024 * 128)
-    answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE, default=0)
+    # answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE, default=0)
     title = models.CharField(max_length=254)
     content = models.TextField()
     input = models.TextField(default='')
@@ -40,6 +42,8 @@ class Problem(models.Model):
     source = models.TextField(blank=True)
     # True表示该题目可见， False表示用于比赛，不可见
     visible = models.BooleanField(default=True)
+    # the number of contests which use this problem
+    numberOfContest = models.IntegerField(default=0)
     # CCF题目专用
     isCCF = models.BooleanField(default=False)
 

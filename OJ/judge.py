@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from subprocess import call, DEVNULL, Popen
 from threading import Thread, Event
 from queue import Queue

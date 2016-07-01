@@ -3,6 +3,7 @@ from django.contrib import admin
 
 from OJ import views
 
+handler404 = 'OJ.views.page_not_found'
 
 urlpatterns = [
     # Examples:

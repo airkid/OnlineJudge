@@ -24,8 +24,11 @@ SECRET_KEY = 'uxel0_!g%a*dt4lhijguccv!-_ta@1tu_at_o4f*bv5ail^)4$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
+
+# DEBUG = False
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# ALLOWED_HOSTS = ['*']
 
 DEFAULT_CHARSET = 'utf-8'
 
@@ -38,7 +41,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'OJ'
+    'OJ',
+    'cronjobs'
 )
 
 MIDDLEWARE_CLASSES = (

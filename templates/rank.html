@@ -1,0 +1,24 @@
+{% extends "base_list.html" %}
+
+{% block title %}Rank{% endblock %}
+
+{% block navbar %}{% include "include/navbar-rank.html" %}{% endblock %}
+
+{% block list %}
+    <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Accept</th>
+        <th>Submit</th>
+        <th>Rate</th>
+    </tr>
+    {% for item in list %}
+        <tr>
+            <th> T1 </th>
+            <th> T2 </th>
+            <th> T3 </th>
+            <th> T4 </th>
+            <th> T5 </th>
+        </tr>
+    {% endfor %}
+{% endblock %}

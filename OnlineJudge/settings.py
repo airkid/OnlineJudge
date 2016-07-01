@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'OJ',
-    'cronjobs'
 )
 
 MIDDLEWARE_CLASSES = (

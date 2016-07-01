@@ -272,3 +272,27 @@ def contest_submit(req, cid):
 
 def page_not_found(req):
     return ren2res("404.html", req, {})
+
+def rank(req):
+    pg = int(req.GET.get('pg', 1))
+    search = req.GET.get('search', "")
+    if search:
+            qs = UserInfo.objects.filter(Q(id__icontains=search))
+        # .select_related("uid__name").filter(uid__contains=search)
+    else:
+        qs = UserInfo.objects.all()
+
+    max = qs.count() // 20 + 1
+
+    if (pg > max):
+        raise Http404("no such page")
+    start = pg - PAGE_NUMBER_EVERY_PAGE
+    if start < 1:
+        start = 1
+    end = pg + PAGE_NUMBER_EVERY_PAGE
+    if end > max:
+        end = max
+
+    lst = qs[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+
+    return ren2res("rank.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})

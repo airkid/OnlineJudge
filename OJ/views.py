@@ -4,6 +4,7 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.template import Context, RequestContext, loader
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.db.models import Q
 from django.core.files.base import ContentFile
 import datetime
@@ -272,3 +273,20 @@ def contest_submit(req, cid):
 
 def page_not_found(req):
     return ren2res("404.html", req, {})
+
+@login_required
+def contest_time(req, cid):
+    if req.is_ajax():
+        contest = Contest.objects.get(id = cid)
+        startTime = contest.start_time.strftime('%Y-%m-%d %H:%M:%S UTC')
+
+        days = contest.duration_time.days
+        seconds = contest.duration_time.seconds
+
+        durationTime = days * 3600 * 24 + seconds;
+
+        timeData = {'start' : startTime,
+                    'duration' : durationTime}
+
+        print(timeData)
+        return JsonResponse(timeData)

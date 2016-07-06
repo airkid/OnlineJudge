@@ -10,13 +10,79 @@
     <ul class="text-center" style="list-style:none;">
         <li>Start Time: {{ contest.start_time }} &nbsp;&nbsp;Duration Time: {{ contest.duration_time }}</li>
         <li>Contest type: Private &nbsp;&nbsp;Contest Status: running</li>
-        <li>Current Time: 2015-11-18 13:00:00</li>
+        <li id="current">Current Time: 2015-11-18 13:00:00</li>
     </ul>
-        <div style="width: 32%; text-align: right; float; left;"><span>3:30:00</span></div>
+
+<div id="current2" style="width: 0%; text-align: right; float; left;"><span></span></div>
 <div class="progress">
-    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" style="width: 30%">
+    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" id ="progress" style="width:0%">
     </div>
 </div>
+<script type="text/javascript">
+    var start;
+    var duration;
+    $(document).ready(function () {
+         $.ajax({
+             type: "post",
+             url: "/contest/" + {{ contest.id }} + "/time/",
+             dataType: "json",
+             success: function(data){
+                start=new Date(data.start);
+                duration=data.duration;
+                setInterval(function(){refreshtime(start, new Date());},1000);
+             }
+         });
+
+
+});
+
+    function str_pad_left(string,pad,length) {
+        return (new Array(length+1).join(pad)+string).slice(-length);
+    }
+
+    function secondsToTime(secs)
+    {
+        var hours = Math.floor(secs / (60 * 60));
+
+        var divisor_for_minutes = secs % (60 * 60);
+        var minutes = Math.floor(divisor_for_minutes / 60);
+
+        var divisor_for_seconds = divisor_for_minutes % 60;
+        var seconds = Math.ceil(divisor_for_seconds);
+
+        return hours + ":" + str_pad_left(minutes,'0',2)+':'+str_pad_left(seconds,'0',2);;
+    }
+    function refreshtime(start,current){
+        var current=new Date();
+        var elapsed;
+        elapsed=(current.getTime()-start.getTime())/1000;
+        var cutdown;
+        cutdown=duration-elapsed;
+        var elapsedrate;
+        elapsedrate2=(elapsed/duration+0.01)*100+"%"
+        elapsedrate=(elapsed/duration)*100+"%";
+        var cutdowntime= secondsToTime(cutdown);
+        $("#current").html("Current Time: "+current);
+        $("#current2").html("<span></span>");
+        if(elapsed>duration){
+            $("#current2").css("width", "101%");
+            $("#progress").css("width", "100%");
+        } else if(elapsed<=0){
+            $("#current2").css("width", "1%");
+            $("#progress").css("width", "0%");
+        } else {
+            $("#current2").css("width", elapsedrate2);
+            $("#progress").css("width", elapsedrate);
+        }
+
+        $("#current").html("Current Time: "+current);
+        $("#current2").html("<span>"+cutdowntime+"</span>");
+
+
+    }
+
+</script>
+
 {% endblock %}
 {% block content %}
 

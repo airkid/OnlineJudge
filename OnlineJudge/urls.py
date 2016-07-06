@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^contest/([0-9]+)/submit/$', views.contest_submit),
     url(r'^contest/([0-9]+)/time/$', views.contest_time),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^rank/$', views.rank),
 ]

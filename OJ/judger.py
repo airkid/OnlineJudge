@@ -494,6 +494,8 @@ class Judger(Daemon):
         self.__submit = submit
         prob = self.__submit.pid
         self.id = str(self.__submit.id)
+        # self.uid = str(self.__submit.uid)
+        # self.pid = str(self.__submit.pid)
         self.lang = int(self.__submit.lang)
         self.lcpu = int(prob.limit_time)
         self.lmem = int(prob.limit_memory)
@@ -523,7 +525,7 @@ class Judger(Daemon):
                 self.__submit.status = test.result
                 self.__submit.run_time = test.cpu_used
                 self.__submit.run_memory = test.memory_used
-                self.__submit.save()
+                # self.__submit.save()
         if not over:
             self.__submit.status = 0
             self.__submit.run_time = testList[-1].cpu_used
@@ -534,6 +536,24 @@ class Judger(Daemon):
 
         rmtree(BINARY_PATH + self.id)
         # print('Result is '+str(self.status))
+
+    #try是尝试过的总次数，ac是正确的题目数
+
+        # problem_try = Submit.objects.filter(uid=self.__submit.uid,status=1).count()
+        problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
+        self.__submit.uid.info.problem_try = problem_try + 1
+        print("try is ")
+        print(problem_try)
+
+        if (self.__submit.status == 0):
+            problem_ac = Submit.objects.filter(pid=self.__submit.pid, uid=self.__submit.uid, status=0).count()
+            print("   ac is ")
+            print(problem_ac)
+            if(problem_ac == 0):
+                self.__submit.uid.info.problem_ac = self.__submit.uid.info.problem_ac + 1
+
+        self.__submit.uid.info.save()
+
         self.__submit.save()
 
 Judger.init()
@@ -541,7 +561,7 @@ Judger.init()
 
 # for test
 
-# judger = Judger('javare',3,1,536870912)
+# judger = Judger('javare',3,1,5368.70912)
 # judger = Judger('javabigmem',3,1,268435456)
 # judger = Judger('javabigtime',3,1,536870912)
 # judger = Judger('javasmallmem',3,1,536870912)

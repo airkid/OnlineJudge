@@ -4,15 +4,6 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
-
-class UserInfo(models.Model):
-    id = models.OneToOneField(User, primary_key=True, related_name='info')
-    school = models.CharField(max_length=50, blank=True)
-
-    def __str__(self):
-        return str(self.id)
-
-
 LANG_CHOICE = (
     (0, 'NONE'),
     (1, 'C'),
@@ -65,6 +56,24 @@ class Problem(models.Model):
     class Meta:
         ordering = ['create_time']
 
+class UserInfo(models.Model):
+    id = models.OneToOneField(User, primary_key=True, related_name='info')
+    school = models.CharField(max_length=50, blank=True)
+    problem_ac = models.IntegerField(default = 0)
+    problem_try = models.IntegerField(default = 0)
+
+    def __str__(self):
+        return str(self.id)
+
+# class ProblemsAC(models.Model):
+#     uid = models.ForeignKey(UserInfo);
+#     pid = models.ForeignKey(Problem);
+#     number = models.IntegerField(default=0);
+
+# class ProblemsTry(models.Model):
+#     uid = models.ForeignKey(UserInfo);
+#     pid = models.ForeignKey(Problem);
+#     number = models.IntegerField(default=0);
 
 class TestCase(models.Model):
     pid = models.ForeignKey(Problem)
@@ -144,4 +153,3 @@ class Submit(models.Model):
 
     class Meta:
         ordering = ['time']
-

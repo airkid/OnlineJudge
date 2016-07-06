@@ -14,11 +14,11 @@
     </tr>
     {% for item in list %}
         <tr>
-            <th> T1 </th>
-            <th> T2 </th>
-            <th> T3 </th>
-            <th> T4 </th>
-            <th> T5 </th>
+            <th> {{forloop.counter}} </th>
+            <th> {{item.id}} </th>
+            <th> {{item.problem_ac}} </th>
+            <th> {{item.problem_try}} </th>
+            <th> {{item.problem_ac}}/{{item.problem_try}} </th>
         </tr>
     {% endfor %}
 {% endblock %}

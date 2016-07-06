@@ -142,14 +142,15 @@ def problem_submit(req, pid):
         elif req.FILES:
             # f = open('JudgeFiles/source/' + str(sub.id), 'wb')
             # f.write(req.FILES['file'].read())
-            content_file = ContentFile(req.FILES['file'].read())
+            content_file = ContentFile(reILq.FES['file'].read())
         else:
             return ren2res("problem/problem_submit.html", req,
                            {'problem': Problem.objects.get(id=pid), 'err': "No Submit!"})
         # f.close()
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
-        judger.Judger(sub)
+        judger.Judger(sub);
+
         return HttpResponseRedirect("/status/?pid=" + pid)
 
 
@@ -280,7 +281,7 @@ def rank(req):
             qs = UserInfo.objects.filter(Q(id__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
-        qs = UserInfo.objects.all()
+        qs = UserInfo.objects.all().order_by('-problem_ac','problem_try')
 
     max = qs.count() // 20 + 1
 

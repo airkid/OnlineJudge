@@ -1,41 +1,8 @@
 <br>
 <table class="table table-bordered table-hover text-center" id = "rank_table">
     <thead>
-        <tr>
-            <th class="text-center">Rank</th>
-            <th class="text-center">UserID</th>
-            <th class="text-center">Solve</th>
-            <th class="text-center">Penalty</th>
-            <th class="text-center">A</th>
-            <th class="text-center">B</th>
-            <th class="text-center">C</th>
-            <th class="text-center">D</th>
-            <th class="text-center">E</th>
-        </tr>
     </thead>
-    <tbody>
-        <tr>
-            <td style="align:center;">1</td>
-            <td class="text-center">小灰灰~</td>
-            <td>3</td>
-            <td>1234</td>
-            <td style="background-color:green; color:white;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color:#FFCCCC;"><br><span>(-1)</span></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td style="background-color: #909090;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color: #D0D0D0;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color: black; color:white;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color: #909090;">00:30:21<br><span>(-2)</span></td>
-            <td style="background-color: black; color:white;"><br><span>(-1)</span></td>
-        </tr>
+    <tbody>     
     </tbody>
 </table>
 
@@ -100,7 +67,7 @@
                     $.each(data.statsinfo, function(i, item){
                         thHTML += "<td style=\"background-color: #D0D0D0;\">" + item.acNum + "/" + item.tryNum + "</td>";
                     });
-                    thHTML += "</tr>"
+                    thHTML += "<tr>"
                     $("#rank_table tbody").append(thHTML);
 
                 }

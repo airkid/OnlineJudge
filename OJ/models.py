@@ -21,7 +21,7 @@ class Problem(models.Model):
     limit_time = models.PositiveIntegerField(default=1)
     limit_memory = models.PositiveIntegerField(default=1024 * 1024 * 128)
     # answer_lang = models.PositiveSmallIntegerField(choices=LANG_CHOICE, default=0)
-    title = models.CharField(max_length=254)
+    title = models.CharField(max_length=254, unique = True)
     content = models.TextField()
     input = models.TextField(default='')
     output = models.TextField(default='')

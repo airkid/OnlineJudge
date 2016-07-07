@@ -1,10 +1,111 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+<br>
+<table class="table table-bordered table-hover text-center" id = "rank_table">
+    <thead>
+        <tr>
+            <th class="text-center">Rank</th>
+            <th class="text-center">UserID</th>
+            <th class="text-center">Solve</th>
+            <th class="text-center">Penalty</th>
+            <th class="text-center">A</th>
+            <th class="text-center">B</th>
+            <th class="text-center">C</th>
+            <th class="text-center">D</th>
+            <th class="text-center">E</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="align:center;">1</td>
+            <td class="text-center">小灰灰~</td>
+            <td>3</td>
+            <td>1234</td>
+            <td style="background-color:green; color:white;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color:#99FF66;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color:#FFCCCC;"><br><span>(-1)</span></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td style="background-color: #909090;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color: #D0D0D0;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color: black; color:white;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color: #909090;">00:30:21<br><span>(-2)</span></td>
+            <td style="background-color: black; color:white;"><br><span>(-1)</span></td>
+        </tr>
+    </tbody>
+</table>
 
-</body>
-</html>
+<script type="text/javascript">
+    function str_pad_left(string,pad,length) {
+        return (new Array(length+1).join(pad)+string).slice(-length);
+    }
+
+    function secondsToTime(secs)
+    {
+        var hours = Math.floor(secs / (60 * 60));
+
+        var divisor_for_minutes = secs % (60 * 60);
+        var minutes = Math.floor(divisor_for_minutes / 60);
+
+        var divisor_for_seconds = divisor_for_minutes % 60;
+        var seconds = Math.ceil(divisor_for_seconds);
+
+        return hours + ":" + str_pad_left(minutes,'0',2)+':'+str_pad_left(seconds,'0',2);;
+    }
+    setInterval(function(){refreshtime(start, new Date());},1000);
+    $(document).ready(function () {
+        setInterval(function(){
+            $.ajax({
+                type: "post",
+                url: "/contest/" + {{ contest.id }} + "/rank/",
+                dataType: "json",
+                success: function(data){
+                    $("#rank_table tr").remove();
+                    thHTML = "<tr><th class=\"text-center\">Rank</th><th class=\"text-center\">UserID</th><th class=\"text-center\">Solve</th><th class=\"text-center\">Penalty</th>"
+                    $.each(data.statsinfo, function(i, item){
+                        thHTML += "<th class=\"text-center\">" + item.probid + "</th>";
+                    });
+                    thHTML += "</tr>";
+                    $("#rank_table thead").append(thHTML);
+                    $.each(data, function(i, item) {
+                        if (item != data.statsinfo) {
+                            trHTML = "<tr><td style=\"align:center;\">" + i +
+                            "</td><td class=\"text-center\">" + item.name +
+                            "</td><td>" + item.solved +
+                            "</td><td>" + item.penalty + "</td>";
+                            $.each(item.probs, function(i, pitem){
+                                if (pitem.acNum == 0) {
+                                    if (pitem.failNum == 0) {
+                                        trHTML += "<td></td>";
+                                    } else {
+                                        trHTML += "<td style=\"background-color: black; color:white;\"><br><span>(-" + pitem.failNum + ")</span></td>";
+                                    }
+                                } else {
+                                    if (pitem.failNum == 0) {
+                                        trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "</td>";
+                                    } else {
+                                        trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "<br><span>(-" + pitem.failNum + ")</span></td>";
+                                    }
+                                }
+                            });
+                            trHTML += "</tr>"
+                            $("#rank_table tbody").append(trHTML);
+                        }
+                    });
+                    thHTML = "<tr><td></td><td></td><td></td><td></td>";
+                    $.each(data.statsinfo, function(i, item){
+                        thHTML += "<td style=\"background-color: #D0D0D0;\">" + item.acNum + "/" + item.tryNum + "</td>";
+                    });
+                    thHTML += "</tr>"
+                    $("#rank_table tbody").append(thHTML);
+
+                }
+            });
+        },10000);
+
+    })
+</script>

@@ -100,6 +100,9 @@
             <li>
                 <a data-toggle="tab" href="#panel-submit">Submit</a>
             </li>
+            <li>
+                <a data-toggle="tab" href="#panel-rank">Rank</a>
+            </li>
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="panel-overview">
@@ -113,6 +116,9 @@
             </div>
             <div class="tab-pane" id="panel-submit">
                 {% include "contest/contest_submit.html" %}
+            </div>
+            <div class="tab-pane" id="panel-rank">
+                {% include "contest/contest_rank.html" %}
             </div>
         </div>
     </div>

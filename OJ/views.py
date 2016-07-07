@@ -272,6 +272,52 @@ def contest_submit(req, cid):
     else:
         return HttpResponseRedirect("/contest/"+cid+"/status?pid=" + pid)
 
+def dateToInt(date, field):
+     if field == 0:
+         return date.days * 24 * 60 + date.seconds // 60
+     else:
+         return date.days * 24 * 60 *60  + date.seconds
+
+@login_required
+def contest_rank(req, cid):
+    if req.is_ajax():
+        contest = Contest.objects.get(id = cid)
+        status_list = Submit.objects.filter(cid = cid).order_by("time")
+
+        rank_list = {}
+        statsinfo = {}
+        pos = 0
+        problem_list = contest.get_problem_list()
+        length = len(problem_list)
+
+        rank_list["statsinfo"] = [{} for i in range(length)]
+
+        for item in problem_list:
+            rank_list["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
+            statsinfo[item[2].title] = {"pos" : pos}
+            pos = pos + 1
+
+        for item in status_list:
+            if item.uid.username not in rank_list.keys():
+                rank_list[item.uid.username] = {"name" : item.uid.username, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
+
+            pos = statsinfo[item.pid.title]["pos"]
+
+            if item.status == 0:
+                rank_list["statsinfo"][pos]["acNum"] += 1
+            rank_list["statsinfo"][pos]["tryNum"] += 1
+
+            if rank_list[item.uid.username]["probs"][pos]["acNum"] == 0:
+                if item.status == 0:
+                    rank_list[item.uid.username]["probs"][pos]["acNum"] += 1
+                    rank_list[item.uid.username]["probs"][pos]["acTime"] = dateToInt(item.time - contest.start_time, 1)
+                    rank_list[item.uid.username]["penalty"] += 20 * rank_list[item.uid.username]["probs"][pos]["failNum"] + dateToInt(item.time - contest.start_time, 0)
+                    rank_list[item.uid.username]["solved"] += 1
+                else:
+                    rank_list[item.uid.username]["probs"][pos]["failNum"] += 1
+        print(rank_list)
+        return JsonResponse(rank_list)
+
 def page_not_found(req):
     return ren2res("404.html", req, {})
 

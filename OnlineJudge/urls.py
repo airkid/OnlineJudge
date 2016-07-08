@@ -27,4 +27,5 @@ urlpatterns = [
     url(r'^contest/([0-9]+)/rank/$', views.contest_rank),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^rank/$', views.rank),
+    url(r'^about/$', views.about),
 ]

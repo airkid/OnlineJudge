@@ -12,9 +12,13 @@
         </tr>
         </thead>
         <tbody>
-        {% for cnt,chr,problem in problems %}
+        {% for cnt,chr,problem, status in problems %}
             <tr>
-                <th>YES</th>
+                {% if status == 0 %}
+                <th></th>
+                {% else %}
+                <th style="color:green;"><span class="glyphicon glyphicon-check" aria-hidden="true" style="color:green;"></span>&nbsp;Yes</th>
+                {% endif%}
                 <th>Problem {{ chr }}</th>
                 <th><a href="#" onclick="get_problem({{ problem.id }})">{{ problem.title }}</a></th>
             </tr>

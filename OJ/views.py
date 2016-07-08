@@ -214,6 +214,11 @@ def contest_detail(req, cid):
         start = False
     if start:
         problems = contest.get_problem_list()
+        length = len(problems)
+        problems_status = [0 for i in range(length)]
+
+        for i in range(length):
+            problems[i].append(len(Submit.objects.filter(uid = req.user).filter(pid = problems[i][2]).filter(status = 0)))
         return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems, 'problem': problems[0][2]})
     else:
         return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Contest not start yet!"})
@@ -343,7 +348,7 @@ def rank(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-            qs = UserInfo.objects.filter(Q(id__icontains=search))
+        qs = UserInfo.objects.filter(Q(id__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
         qs = UserInfo.objects.all().order_by('-problem_ac','problem_try')
@@ -362,4 +367,7 @@ def rank(req):
     lst = qs[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
 
     return ren2res("rank.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})
+
+def about(req):
+    return ren2res("about.html", req, {})
 

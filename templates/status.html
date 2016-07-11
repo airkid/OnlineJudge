@@ -32,7 +32,7 @@
                 <td>{{ item.get_status_display }}</td>
             {% endifequal %}
             {% ifequal item.uid.id user.id %}
-                <td><a href="/show_source?solution_id={{ item.id }}">{{ item.get_lang_display }}</a></td>
+                <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></td>
             {% else %}
                 <td>{{ item.get_lang_display }}</td>
             {% endifequal %}

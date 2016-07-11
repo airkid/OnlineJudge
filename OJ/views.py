@@ -230,7 +230,7 @@ def contest_get_problem(req, cid):
         pid = req.GET.get('pid')
         t = loader.get_template('./contest/contest_problem.html')
         problem = Problem.objects.get(id=pid)
-        content_html = t.render(Context({'problem': problem}))
+        content_html = t.render(Context({'problem': problem, 'user' : req.user}))
         return HttpResponse(content_html)
 
 
@@ -239,7 +239,7 @@ def contest_status(req, cid):
     if req.is_ajax():
         t = loader.get_template('./contest/contest_status.html')
         status_list = Submit.objects.filter(cid=cid).order_by('-time')
-        content_html = t.render(Context({'status_list': status_list}))
+        content_html = t.render(Context({'status_list': status_list, 'user' : req.user}))
         return HttpResponse(content_html)
 
 

@@ -368,6 +368,24 @@ def rank(req):
 
     return ren2res("rank.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})
 
+
 def about(req):
     return ren2res("about.html", req, {})
+
+
+LANG_DICT = {0: 'none', 1: 'c', 2: 'cpp', 3: 'java'}
+
+
+@login_required
+def show_source(req):
+    solution_id = req.GET.get('solution_id')
+    query = Submit.objects.filter(id=solution_id)
+    if len(query) == 0:
+        raise Http404
+    elif query[0].uid.id != req.user.id:
+        raise Http404
+    else:
+        submit = query[0]
+        file = submit.source_code.read(-1).decode('utf-8')
+        return ren2res('show_source.html', req, {'submit': submit, 'code': file, 'lang': LANG_DICT[submit.lang]})
 

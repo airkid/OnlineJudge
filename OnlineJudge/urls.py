@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^rank/$', views.rank),
     url(r'^about/$', views.about),
+    url(r'^show_source/$', views.show_source),
 ]

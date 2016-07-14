@@ -194,6 +194,7 @@ def contest(req):
     pg = req.GET.get('pg')
     if not pg:
         pg = 1
+    pg = int(pg)
 
     max_cnt = query.count()
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)

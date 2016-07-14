@@ -27,7 +27,7 @@ SECRET_KEY = 'uxel0_!g%a*dt4lhijguccv!-_ta@1tu_at_o4f*bv5ail^)4$'
 # ALLOWED_HOSTS = []
 
 DEBUG = False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'sduoj.org']
 # ALLOWEDHOSTS = ['*']
 
 DEFAULT_CHARSET = 'utf-8'
@@ -121,7 +121,7 @@ MEDIA_DIR='media/'
 
 FILE_UPLOAD_MAX_MEMORY_SIZE=2560
 
-LOGIN_URL='/login'
+LOGIN_URL='/login/'
 
 TIME_ZONE = 'Asia/Shanghai'
 

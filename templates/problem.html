@@ -27,3 +27,10 @@
 </tr>
 {% endfor %}
 {% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/problem?pg={{ id }}">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -15,18 +15,18 @@
     <body>
         <nav class="navbar navbar-default">
             <div class="container-fluid">
-                <div class="navbar-header"><a class="navbar-brand" href="/">SDU Online Judge</a></div>
+                <div class="navbar-header"><a class="navbar-brand" href="/"><span><img src="/static/img/logo.png" width="250px"></span></a></div>
                 <ul class="nav navbar-nav">
                 {% block navbar %}{% endblock %}
                 </ul>
                 {% if user %}
                 <p class="navbar-collapse navbar-text  navbar-right">Welcome,
-                    <a href="/user/{{ user.id }}" class="navbar-link bg-info">{{ user.name }} </a>
+                    <span class="navbar-link bg-info">{{ user.name }} </span>
                     <a href="/logout" class="navbar-link bg-danger">Exit</a>
                 </p>
                 {% else %}
                 <div class="navbar-collapse navbar-right">
-                    <a href="/login"><button class="btn btn-primary navbar-btn">Sign in</button></a>
+                    <a href="/login"><button class="btn btn-success navbar-btn">Sign in</button></a>
                     <a href="/register"><button class="btn btn-default navbar-btn">Register</button></a>
                 </div>
                 {% endif %}

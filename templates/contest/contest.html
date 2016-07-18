@@ -15,7 +15,7 @@
 
 <div id="current2" style="width: 0%; text-align: right; float; left;"><span></span></div>
 <div class="progress">
-    <div class="progress-bar progress-bar-success " role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" id ="progress" style="width:0%">
+    <div class="progress-bar progress-bar-info " role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100" id ="progress" style="width:0%">
     </div>
 </div>
 <script type="text/javascript">
@@ -27,7 +27,7 @@
              url: "/contest/" + {{ contest.id }} + "/time/",
              dataType: "json",
              success: function(data){
-                start=new Date(data.start);
+                start= new Date(data.start);
                 duration=data.duration;
                 setInterval(function(){refreshtime(start, new Date());},1000);
              }
@@ -55,28 +55,32 @@
     function refreshtime(start,current){
         var current=new Date();
         var elapsed;
-        elapsed=(current.getTime()-start.getTime())/1000;
+        elapsed=(current.getTime()-start.getTime()- 28800000)/1000;
         var cutdown;
         cutdown=duration-elapsed;
         var elapsedrate;
         elapsedrate2=(elapsed/duration+0.01)*100+"%"
         elapsedrate=(elapsed/duration)*100+"%";
         var cutdowntime= secondsToTime(cutdown);
-        $("#current").html("Current Time: "+current);
-        $("#current2").html("<span></span>");
+
         if(elapsed>duration){
             $("#current2").css("width", "101%");
             $("#progress").css("width", "100%");
+            $("#current").html("Current Time: "+current);
+            $("#current2").html("<span>"+cutdowntime+"</span>");
         } else if(elapsed<=0){
             $("#current2").css("width", "1%");
             $("#progress").css("width", "0%");
+            $("#current").html("Current Time: "+current);
+            $("#current2").html("<span></span>");
         } else {
             $("#current2").css("width", elapsedrate2);
             $("#progress").css("width", elapsedrate);
+            $("#current").html("Current Time: "+current);
+            $("#current2").html("<span>"+cutdowntime+"</span>");
         }
 
-        $("#current").html("Current Time: "+current);
-        $("#current2").html("<span>"+cutdowntime+"</span>");
+
 
 
     }

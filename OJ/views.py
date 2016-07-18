@@ -194,7 +194,6 @@ def contest(req):
     pg = req.GET.get('pg')
     if not pg:
         pg = 1
-    pg = int(pg)
 
     max_cnt = query.count()
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
@@ -332,8 +331,7 @@ def page_not_found(req):
 def contest_time(req, cid):
     if req.is_ajax():
         contest = Contest.objects.get(id = cid)
-        startTime = contest.start_time.strftime('%Y-%m-%d %H:%M:%S UTC')
-
+        startTime = contest.start_time.strftime('%a %b %d %Y %H:%M:%S (UCT)')
         days = contest.duration_time.days
         seconds = contest.duration_time.seconds
 

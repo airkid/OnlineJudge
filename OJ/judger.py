@@ -11,7 +11,7 @@ from tempfile import TemporaryFile
 import os,signal
 import os.path
 
-FILE_PATH = './JudgeFiles/'
+FILE_PATH = '/home/sduacm/OnlineJudge/JudgeFiles/'
 TEMP_PATH = '/tmp/sduoj/'
 
 FILE_PATH = os.path.abspath(FILE_PATH)
@@ -535,11 +535,15 @@ class Judger(Daemon):
         from shutil import rmtree
 
         rmtree(BINARY_PATH + self.id)
-        # print('Result is '+str(self.status))
+        print('Result is '+str(self.status))
 
-    #try是尝试过的总次数，ac是正确的题目数
+        #try是尝试过的总次数，ac是正确的题目数
 
         # problem_try = Submit.objects.filter(uid=self.__submit.uid,status=1).count()
+        print("User:")
+        print(self.__submit.uid)
+        print(".info:")
+        print(self.__submit.uid.info)
         problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
         self.__submit.uid.info.problem_try = problem_try + 1
         print("try is ")

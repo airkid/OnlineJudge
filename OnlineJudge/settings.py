@@ -15,7 +15,6 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -26,7 +25,8 @@ SECRET_KEY = 'uxel0_!g%a*dt4lhijguccv!-_ta@1tu_at_o4f*bv5ail^)4$'
 # DEBUG = True
 # ALLOWED_HOSTS = []
 
-DEBUG = False
+#DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'sduoj.org']
 # ALLOWEDHOSTS = ['*']
 
@@ -42,7 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'OJ',
-    # 'kronos'
+     # 'kronos'
 )
 
 MIDDLEWARE_CLASSES = (

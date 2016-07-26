@@ -141,7 +141,7 @@ class Submit(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
     run_time = models.PositiveSmallIntegerField(null=True, default=0)
     run_memory = models.PositiveIntegerField(null=True, default=0)
-    source_code = models.FileField(default=None, upload_to='JudgeFiles/source/')
+    source_code = models.FileField(default=None, upload_to='/home/sduacm/OnlineJudge/JudgeFiles/source/')
     # -1表示非比赛提交, 其余为比赛提交
     cid = models.IntegerField(default=-1)
     return_code = models.IntegerField(null=True)

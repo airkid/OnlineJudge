@@ -8,7 +8,7 @@ from OJ.models import TestCase, Submit
 import os
 import os.path
 
-FILE_PATH = './JudgeFiles/'
+FILE_PATH = '/home/sduacm/OnlineJudge/JudgeFiles/'
 TEMP_PATH = '/tmp/sduoj/'
 
 FILE_PATH = os.path.abspath(FILE_PATH)

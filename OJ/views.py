@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 import datetime
 from OJ.models import *
 import pytz
+from django.utils import timezone
 import OJ.judge as judge
 import OJ.judger as judger
 
@@ -152,7 +153,7 @@ def problem_submit(req, pid):
         sub.save()
         judger.Judger(sub);
 
-        return HttpResponseRedirect("/status/?pid=" + pid)
+        return HttpResponseRedirect("/status/")
 
 
 def status(req):
@@ -194,6 +195,7 @@ def contest(req):
     pg = req.GET.get('pg')
     if not pg:
         pg = 1
+    pg = int(pg)
 
     max_cnt = query.count()
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
@@ -207,7 +209,9 @@ def contest(req):
 @login_required
 def contest_detail(req, cid):
     contest = Contest.objects.get(id=cid)
-    time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
+    # time = datetime.datetime.now(pytz.timezone(pytz.country_timezones('cn')[0]))
+    # time = datetime.datetime.now()
+    time = timezone.now()
     if time > contest.start_time:
         start = True
     else:
@@ -221,14 +225,14 @@ def contest_detail(req, cid):
             problems[i].append(len(Submit.objects.filter(uid = req.user).filter(pid = problems[i][2]).filter(status = 0)))
         return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems, 'problem': problems[0][2]})
     else:
-        return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Contest not start yet!"})
+        return ren2res("contest/contest.html", req, {'contest': contest, 'err': time})
 
 
 @login_required
 def contest_get_problem(req, cid):
     if req.is_ajax():
         pid = req.GET.get('pid')
-        t = loader.get_template('./contest/contest_problem.html')
+        t = loader.get_template('contest/contest_problem.html')
         problem = Problem.objects.get(id=pid)
         content_html = t.render(Context({'problem': problem, 'user' : req.user}))
         return HttpResponse(content_html)
@@ -237,7 +241,7 @@ def contest_get_problem(req, cid):
 @login_required
 def contest_status(req, cid):
     if req.is_ajax():
-        t = loader.get_template('./contest/contest_status.html')
+        t = loader.get_template('contest/contest_status.html')
         status_list = Submit.objects.filter(cid=cid).order_by('-time')
         content_html = t.render(Context({'status_list': status_list, 'user' : req.user}))
         return HttpResponse(content_html)
@@ -271,7 +275,7 @@ def contest_submit(req, cid):
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
-        judge.Judger(sub)
+        judger.Judger(sub)
     if not finish:
         return HttpResponseRedirect("/contest/" + cid + "/")
     else:
@@ -331,7 +335,8 @@ def page_not_found(req):
 def contest_time(req, cid):
     if req.is_ajax():
         contest = Contest.objects.get(id = cid)
-        startTime = contest.start_time.strftime('%a %b %d %Y %H:%M:%S (UCT)')
+        startTime = contest.start_time.strftime('%Y-%m-%d %H:%M:%S UTC')
+
         days = contest.duration_time.days
         seconds = contest.duration_time.seconds
 
@@ -386,5 +391,18 @@ def show_source(req):
     else:
         submit = query[0]
         file = submit.source_code.read(-1).decode('utf-8')
-        return ren2res('show_source.html', req, {'submit': submit, 'code': file, 'lang': LANG_DICT[submit.lang]})
+        err = ""
+        try:
+            f = open('/home/sduacm/OnlineJudge/JudgeFiles/result/' + str(submit.id), 'r')
+            err = f.read()
+            f.close()
+        except IOError:
+            pass
+        err = err.replace("/tmp","...")
+        err = err.replace("/sduoj/source","")
+        print('error:')
+        print(err)
+        if err == '':
+            err = 'Successful'
+        return ren2res('show_source.html', req, {'submit': submit, 'code': file, 'errinfo': err, 'lang': LANG_DICT[submit.lang]})
 

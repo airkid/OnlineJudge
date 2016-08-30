@@ -17,7 +17,7 @@
             <th> {{forloop.counter}} </th>
             <th> {{item.id}} </th>
             <th> {{item.problem_ac}} </th>
-            <th> {{item.problem_try}} </th>
+	    <th> <a href="/status/?search={{ item.id }}">{{item.problem_try}} </a></th>
             <th> {{item.problem_ac}}/{{item.problem_try}} </th>
         </tr>
     {% endfor %}

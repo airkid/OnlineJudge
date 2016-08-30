@@ -3,7 +3,9 @@
 {% block detail %}
 
     <h3 class="text-info">Description</h3>
-    <pre>{{ problem.content }} </pre>
+    {% autoescape off %}
+    <pre>{{ problem.content }}</pre> 
+    {% endautoescape %}
 
 
     <h3 class="text-info">Input</h3>

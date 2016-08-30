@@ -98,6 +98,7 @@ class Contest(models.Model):
     start_time = models.DateTimeField()
     duration_time = models.DurationField()
     problems = models.ManyToManyField(Problem, related_name="contests")
+#    users = models.ManyToManyField(User, related_name="contests")
 
     def __str__(self):
         return str(self.name)

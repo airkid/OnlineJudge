@@ -1,11 +1,14 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
+from OJ.models import *
 from subprocess import call, DEVNULL, Popen
+import threading
+import psutil
+import resource as res
 from threading import Thread, Event
 from queue import Queue
 from tempfile import TemporaryFile
-from OJ.models import TestCase, Submit
 
-import os
+import os,signal
 import os.path
 
 FILE_PATH = '/home/sduacm/OnlineJudge/JudgeFiles/'
@@ -68,10 +71,12 @@ class Daemon:
     @classmethod
     def __daemon(cls):
         while True:
+            # print(cls)
             if cls.__queue == None:
                 cls.__daemon_num -= 1
                 break
             self = cls.__queue.get();
+            # print(self)
             if self is None:
                 cls.__daemon_num -= 1
                 cls.__queue.task_done()
@@ -149,7 +154,7 @@ class Complier(Daemon):
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
         if self.result > 0:
             # syntax error
-            self.result = -2
+            self.result = -1
         elif self.result < 0:
             # compilation error
             self.result = -1
@@ -180,20 +185,17 @@ class Complier(Daemon):
         cmd = ['g++', '-o', dst, src]
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
         if self.result > 0:
-            self.result = -2
+            self.result = -1
         elif self.result < 0:
             self.result = -1
         else:
-            # 我脑残在上个版本+了这么句话卡死了，谢谢git
-            # self.result = 3
             os.remove(RESULT_PATH + self.id)
 
     def java(self):
-        print('compiling java')
         ori = ORIGIN_PATH + self.id
         src = SOURCE_PATH + self.id
         try:
-            os.mkdir(src)
+            os.mkdir(src);
         except:
             pass
         src += '/Main.java'
@@ -213,6 +215,8 @@ class Complier(Daemon):
             os.mkdir(dst)
         except:
             pass
+        # print(dst)
+        # print(src)
         cmd = ['javac', '-d', dst, src]
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
         if self.result > 0:
@@ -221,43 +225,11 @@ class Complier(Daemon):
             self.result = -1
         pass
 
-    def python(self):
-        from py_compile import compile, PyCompileError
-
-        ori = ORIGIN_PATH + self.id
-        src = SOURCE_PATH + self.id + '.py'
-        if self.aa:
-            dst = ANSWER_PATH + self.id
-        else:
-            dst = BINARY_PATH + self.id
-        try:
-            os.mkdir(dst)
-        except:
-            pass
-        dst += '/' + self.id + '.pyc'
-        try:
-            os.remove(src)
-        except:
-            pass
-        try:
-            os.symlink(ori, src)
-        except:
-            pass
-
-        self.result = 0
-        try:
-            compile(src, dst, doraise=True, optimize=0)
-        except PyCompileError as err:
-            f = open(RESULT_PATH + self.id, mode='w+')
-            f.write(str(err))  # try try try wtf the error output is?
-            self.result = -2;
-
     compliers = [
         None,
         c,
         cxx,
         java,
-        python,
     ]
 
     def __init__(self, id, lang, as_answer=False):
@@ -275,26 +247,22 @@ Complier.init()
 
 
 class Tester(Daemon):
-    OUTPUT_MAX = 1000
+    OUTPUT_MAX = 1024
 
     class Limiter:
-        def __init__(self, cpu, mem):
-            self.cpu = cpu
-            self.mem = mem
+        def __init__(self, cpu_limit, memory_limit):
+            self.cpu_limit = cpu_limit
+            self.memory_limit = memory_limit
 
         def __call__(self):
-            import resource as res
-
-            res.setrlimit(res.RLIMIT_CORE, (0, 0))
-            res.setrlimit(res.RLIMIT_MEMLOCK, (0, 0))
-            # res.setrlimit(res.RLIMIT_MSGQUEUE,(0,0))
-            # res.setrlimit(res.RLIMIT_NPROC, (0, 0))
-            res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
-            res.setrlimit(res.RLIMIT_CPU,(self.cpu,self.cpu))
-            if self.mem != -1:
-                # print('setmem')
-                res.setrlimit(res.RLIMIT_AS,(self.mem,self.mem))
-            ##os.chroot(CHROOT_PATH)
+            # res.setrlimit(res.RLIMIT_CORE, (0, 0))
+            # res.setrlimit(res.RLIMIT_MEMLOCK, (0, 0))
+            # res.setrlimit(res.RLIMIT_FSIZE, (Tester.OUTPUT_MAX, Tester.OUTPUT_MAX))
+            res.setrlimit(res.RLIMIT_CPU,(self.cpu_limit,-1))
+            if self.memory_limit != -1:
+                res.setrlimit(res.RLIMIT_AS,(2*self.memory_limit,-1))
+            else:
+                res.setrlimit(res.RLIMIT_AS,(-1,-1))
             os.nice(10)
 
     def c(self):
@@ -304,146 +272,237 @@ class Tester(Daemon):
         else:
             bin = BINARY_PATH + self.id + '/c' + self.id
         p = Popen(bin, stdin=self.ifile, stdout=ofile, universal_newlines=True,
-                  preexec_fn=Tester.Limiter(self.lcpu, self.lmem), stderr=DEVNULL)
-        p.wait()
-        # accepted
-        self.result = 0
-        if p.returncode == -9:
-            # time limit exceeded
-            self.result = -5
-        elif p.returncode == -11:
-            # memory limit exceeded
-            self.result = -6
-        elif p.returncode == -25:
-            # output limit exceeded
-            self.result = -4
-        elif p.returncode < 0:
-            # run time error
-            self.result = -3
+                  preexec_fn=Tester.Limiter(self.cpu_limit*2, self.memory_limit), stderr=DEVNULL)
+
+        waitResult = os.wait4(p.pid,0)
+        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
+        self.memory_used = waitResult[2].ru_maxrss
+        # print(str(self.cpu_used)+'  '+str(self.memory_used))
+        self.return_status = waitResult[1]
+        # print(waitResult)
+        # end with a signal
+        if os.WIFSIGNALED(self.return_status):
+            self.return_code = os.WTERMSIG(self.return_status)
+            if self.return_code == signal.SIGXCPU or self.cpu_used>=self.cpu_limit :
+                self.cpu_used = self.cpu_limit
+                self.result = -5
+                # print('TLE')
+            elif self.return_code == signal.SIGSEGV:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            elif self.return_code == signal.SIGKILL:
+                # print('killed')
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            else:
+                print('LOG NEW ERROR '+str(self.return_code))
+        # end with 0 or other error
         else:
-            ofile.seek(0)
-            ofile_string = str(ofile.read(-1)).strip()
-            output_string = self.output.strip()
-            if ofile_string != output_string:
-                self.result = -7
+            if self.return_status == 0:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    ofile.seek(0)
+                    ofile_string = str(ofile.read(-1)).strip()
+                    output_string = self.output.strip()
+                    #delete '/r' generated in windows
+                    ofile_string = ofile_string.replace(chr(13),'')
+                    output_string = output_string.replace(chr(13),'')
+                    # print(ofile_string+'  '+output_string)
+                    if ofile_string != output_string:
+                        self.result = -7
+                        # print('WA')
+                    else:
+                        self.result = 0
+                        # print('AC')
+            else:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+
 
     def cxx(self):
-        #print("running cxx")
         ofile = TemporaryFile('w+t')
         if self.ua:
             bin = ANSWER_PATH + self.id + '/x' + self.id
         else:
             bin = BINARY_PATH + self.id + '/x' + self.id
-        # preexec_fn=Tester.Limiter(self.lcpu, self.lmem)()
-        p = Popen(bin, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.lcpu, self.lmem),
+        p = Popen(bin, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.cpu_limit*2, self.memory_limit),
                   universal_newlines=True, stderr=DEVNULL)
 
-        p.wait()
-        #info=p.read()
-        #print(info)
-        #
-        self.return_code = p.returncode
-        print(self.return_code)
-        #
-        self.result = 0
-        if p.returncode == -9:
-            self.result = -5
-        elif p.returncode == -11:
-            self.result = -6
-        elif p.returncode == -25:
-            self.result = -4
-        elif p.returncode < 0:
-            self.result = -3
+        waitResult = os.wait4(p.pid,0)
+        #  print(waitResult)
+        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
+        #  print(self.cpu_used)
+        self.memory_used = waitResult[2].ru_maxrss
+        # print(str(self.cpu_used)+'  '+str(self.memory_used))
+        self.return_status = waitResult[1]
+        # print(waitResult)
+        # end with a signal
+        if os.WIFSIGNALED(self.return_status):
+            self.return_code = os.WTERMSIG(self.return_status)
+            if self.return_code == signal.SIGXCPU or self.cpu_used>=self.cpu_limit :
+                self.cpu_used = self.cpu_limit
+                self.result = -5
+                # print('TLE')
+            elif self.return_code == signal.SIGSEGV:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            elif self.return_code == signal.SIGKILL:
+                # print('killed')
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            else:
+                print('LOG NEW ERROR '+str(self.return_code))
+        # end with 0 or other error
         else:
-            ofile.seek(0)
-            ofile_string = str(ofile.read(-1)).strip()
-            output_string = self.output.strip()
-            print(ofile_string+'  '+output_string)
-            if ofile_string != output_string:
-                self.result = -7
-
+            if self.return_status == 0:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    ofile.seek(0)
+                    ofile_string = str(ofile.read(-1)).strip()
+                    output_string = self.output.strip()
+                    ofile_string = ofile_string.replace(chr(13),'')
+                    output_string = output_string.replace(chr(13),'')
+                    # print(ofile_string+'  '+output_string)
+                    # for i in ofile_string:
+                        # print(ord(i))
+                    # for i in output_string:
+                        # print(ord(i))
+                    if ofile_string != output_string:
+                        #print('file_string_len:')
+                        #print(len(ofile_string))
+                        #print('file_string:')
+                        #print(ofile_string)
+                        #print('output_len:')
+                        #print(len(output_string))
+                        #print('output_string:')
+                        #print(output_string)
+                        self.result = -7
+                        print('WA')
+                    else:
+                        self.result = 0
+                        # print('AC')
+            else:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
 
     def java(self):
-        print('running java')
         ofile = TemporaryFile('w+t')
         if self.ua:
             dst = ANSWER_PATH + self.id
         else:
             dst = BINARY_PATH + self.id
-        cmd = ['java', '-XX:MaxHeapSize=512m','-cp', dst, 'Main']
+        # careful about the maxheapsize for JVM,should be set
+        cmd = ['java', '-XX:MaxHeapSize=1024m','-cp', dst, 'Main']
+        p = Popen(cmd, stdin=self.ifile, stdout=ofile,  preexec_fn=Tester.Limiter(self.cpu_limit*2, -1),universal_newlines=True,stderr=DEVNULL)
 
-        p = Popen(cmd, stdin=self.ifile, stdout=ofile,  preexec_fn=Tester.Limiter(self.lcpu, -1),universal_newlines=True,stderr=DEVNULL)
-        p.wait()
-
-        self.result = 0
-        if p.returncode == -9:
-            self.result = -5
-        elif p.returncode == -11:
-            self.result = -6
-        elif p.returncode == -25:
-            self.result = -4
-        elif p.returncode < 0:
-            self.result = -3
+        waitResult = os.wait4(p.pid,0)
+        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
+        self.memory_used = waitResult[2].ru_maxrss
+        # print(str(self.cpu_used)+'  '+str(self.memory_used))
+        self.return_status = waitResult[1]
+        # print(waitResult)
+        # end with a signal
+        if os.WIFSIGNALED(self.return_status):
+            self.return_code = os.WTERMSIG(self.return_status)
+            if self.return_code == signal.SIGXCPU or self.cpu_used>=self.cpu_limit :
+                self.cpu_used = self.cpu_limit
+                self.result = -5
+                # print('TLE')
+            elif self.return_code == signal.SIGSEGV:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            elif self.return_code == signal.SIGKILL:
+                # print('killed')
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
+            else:
+                print('LOG NEW ERROR '+str(self.return_code))
+        # end with 0 or other error
         else:
-            ofile.seek(0)
-            ofile_string = str(ofile.read(-1)).strip()
-            output_string = self.output.strip()
-            # print(output_string+' '+ofile_string)
-            if ofile_string != output_string:
-                self.result = -7
-        # print('result: '+str(self.result))
-
-    def pyc(self):
-        ofile = TemporaryFile('w+t')
-        if self.ua:
-            dst = ANSWER_PATH + self.id + '.pyc'
-        else:
-            dst = BINARY_PATH + self.id + '.pyc'
-        cmd = ['python', dst]
-        p = Popen(cmd, stdin=self.ifile, stdout=ofile, universal_newlines=True,
-                  preexec_fn=Tester.Limiter(self.lcpu, self.lmem), stderr=DEVNULL)
-        p.wait()
-
-        self.result = 0
-        if p.returncode == -9:
-            self.result = -5
-        elif p.returncode == -11:
-            self.result = -6
-        elif p.returncode == -25:
-            self.result = -4
-        elif p.returncode < 0:
-            self.result = -3
-        else:
-            # 文件定位到开头
-            ofile.seek(0)
-            ofile_string = str(ofile.read(-1)).strip()
-            output_string = self.output.strip()
-            if ofile_string != output_string:
-                self.result = -7
-
-        pass
+            if self.return_status == 0:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    ofile.seek(0)
+                    ofile_string = str(ofile.read(-1)).strip()
+                    output_string = self.output.strip()
+                    ofile_string = ofile_string.replace(chr(13),'')
+                    output_string = output_string.replace(chr(13),'')
+                    # print(ofile_string+'  '+output_string)
+                    if ofile_string != output_string:
+                        self.result = -7
+                        # print('WA')
+                    else:
+                        self.result = 0
+                        # print('AC')
+            else:
+                if self.memory_used > self.memory_limit/1024:
+                    self.result = -6
+                    # print('MLE')
+                else:
+                    self.result = -3
+                    # print('RE')
 
     testers = [
         None,
         c,
         cxx,
         java,
-        pyc,
     ]
 
-    def __init__(self, id, lang, input, output, cpu, mem, use_answer=False):
+    def __init__(self, id, lang, input, output, cpu_limit, memory_limit, use_answer=False):
         self.id = str(id)
         self.lang = int(lang)
         self.ifile = TemporaryFile(mode='w+t')
         self.ifile.write(input)
         self.ifile.seek(0)
         self.output = str(output)
-        self.lcpu = cpu
-        self.lmem = mem
+        self.cpu_limit = cpu_limit
+        self.memory_limit = memory_limit
+        # for java, give extra 25M, double the original cpu time
+        if self.lang == 3:
+            self.memory_limit = memory_limit + 26214400
+            self.cpu_limit = cpu_limit * 2
         self.ua = use_answer
-        #
-        self.return_code = 1024
-        #
+        # set the stauts for 'running'
+        self.result = 3
         Daemon.__init__(self)
 
     def _run(self):
@@ -455,109 +514,90 @@ Tester.init()
 
 
 class Judger(Daemon):
-    def __init__(self, submit, isCCF=False):
+    def __init__(self, submit):
         self.__submit = submit
-        self.isCCF = isCCF
-        prob = submit.pid
-        self.id = str(submit.id)
-        self.lang = int(submit.lang)
+        prob = self.__submit.pid
+        self.id = str(self.__submit.id)
+        # self.uid = str(self.__submit.uid)
+        # self.pid = str(self.__submit.pid)
+        self.lang = int(self.__submit.lang)
         self.lcpu = int(prob.limit_time)
         self.lmem = int(prob.limit_memory)
         Daemon.__init__(self)
 
     def _run(self):
         c = Complier(self.id, self.lang)
-        self.__submit.status = 1
+        self.status = 1
         c.wait()
         if c.result:
-            # print("result is"+str(c.result))
+            print("compile result is"+str(c.result))
             self.__submit.status = c.result
             self.__submit.save()
             return
-
-        tlist = []
-        for case in TestCase.objects.filter(pid__exact=self.__submit.pid):
-            if not case.sample:
-                tlist.append([Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem),case.score])
-
+        caseList = TestCase.objects.filter(pid__exact=self.__submit.pid)
+        testList = []
+        for case in caseList:
+            testList.append(Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem))
         over = False
-        for t, score in tlist:
+        for test in testList:
             if over:
-                t.cancel()
+                test.cancel()
                 continue
-            t.wait()
-            if t.result:
+            test.wait()
+            if test.result:
                 over = True
-                self.__submit.status = t.result
-                self.__submit.save()
-            else:
-                self.__submit.score += score
-
+                self.__submit.status = test.result
+                self.__submit.run_time = test.cpu_used*1000
+                self.__submit.run_memory = test.memory_used/1024
+                # self.__submit.save()
         if not over:
             self.__submit.status = 0
+            # use ms
+            self.__submit.run_time = testList[-1].cpu_used*1000
+            # use kb
+            self.__submit.run_memory = testList[-1].memory_used/1024
+            # print('save')
+            # print(self.__submit.run_time)
+            # print(self.__submit.run_memory)
             self.__submit.save()
         # print('over')
         # 递归删除二进制目录
         from shutil import rmtree
 
         rmtree(BINARY_PATH + self.id)
-        #######
-        # print("over")
-        # print("test"+str(self.__submit.id)+"  "+str(tlist[0].return_code))
-        self.__submit.save()
+        print('Result is '+str(self.status))
 
+        #try是尝试过的总次数，ac是正确的题目数
+
+        # problem_try = Submit.objects.filter(uid=self.__submit.uid,status=1).count()
+        print(self.__submit.uid.info)
+        problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
+        self.__submit.uid.info.problem_try = problem_try + 1
+        print("try is ")
+        print(problem_try)
+
+        if (self.__submit.status == 0):
+            problem_ac = Submit.objects.filter(pid=self.__submit.pid, uid=self.__submit.uid, status=0).count()
+            print("   ac is ")
+            print(problem_ac)
+            if(problem_ac == 0):
+                self.__submit.uid.info.problem_ac = self.__submit.uid.info.problem_ac + 1
+
+        self.__submit.uid.info.save()
+
+        self.__submit.save()
 
 Judger.init()
 
 
-class Hacker(Daemon):
-    def __init__(self, submit, case, success_save=False, hack_all=True):
-        self.result = 0
-        if submit.status != 0:
-            self.result = 1
-            return
-        if submit.pid != case.pid:
-            self.result = 2;
-            return
-        self.__case = case
-        self.__submit = submit
+# for test
 
-        prob = submit.pid
-        self.id = str(submit.id)
-        self.lang = int(submit.lang)
-        self.input = str(case.input)
-        self.output = str(case.output)
-        self.lcpu = int(prob.limit_time)
-        self.lmem = int(prob.limit_memory)
-        self.ss = success_save
-        self.ha = hack_all
-        Daemon.__init__(self)
-
-    def _run(self):
-        if self.result > 0:
-            return
-        c = Complier(self.id, self.lang)
-        c.wait()
-        if c.result != 0:
-            self.result = c.result
-            self.__submit.status = c.result
-            self.__submit.save()
-            return
-        t = Tester(self.id, self.lang, self.input, self.output, self.lcpu, self.lmem)
-        t.wait()
-        print(t.result)
-        if t.result == 0:
-            self.result = 3
-            return
-
-        if self.ss:
-            self.__case.save()
-        self.__submit.status = t.result
-        self.__submit.return_code = t.return_code
-        self.__submit.save()
-
-        if not self.ha:
-            return
-        for sub in Submit.objects.filter(pid__exact=self.__submit.pid, status__exact=0):
-            Hacker(sub, self.__case, hack_all=False)
-
+# judger = Judger('javare',3,1,5368.70912)
+# judger = Judger('javabigmem',3,1,268435456)
+# judger = Judger('javabigtime',3,1,536870912)
+# judger = Judger('javasmallmem',3,1,536870912)
+# judger = Judger('normal',2,1,209715200)
+# judger = Judger('re',2,1,209715200)
+# judger = Judger('bigmem',2,1,400715200)
+# judger = Judger('bigtime',2,1,209715200)
+# judger = Judger('smallmem',2,1,209715200)

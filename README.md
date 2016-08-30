@@ -16,9 +16,9 @@ ole -25
 tle -24
 
 #接下来要做的事情
-register page
-status page
-contest system
+1. register page
+1. status page
+1. contest system
 
 ##Update 2016-7-25 11:30:29
 register时添加空UserInfo

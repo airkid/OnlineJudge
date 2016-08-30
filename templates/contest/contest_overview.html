@@ -33,6 +33,7 @@
             url: "/contest/" + {{ contest.id }} +"/get_problem?pid="+problem_id,
             success: function (responseData) {
                 $('#panel-problem').html(responseData);
+		MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 $('#problem_detail').tab('show');
             }
         })

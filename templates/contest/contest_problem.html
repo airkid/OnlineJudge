@@ -1,14 +1,32 @@
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+	inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+	displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+	processEscapes: true,
+	skipTags: ['script', 'noscript', 'style', 'textarea', 'code']
+    },
+    messageStyle: "none",
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
+});
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
 <div class="text-center">
     <h1 class="text-success">{{ problem.title }}</h1>
     <ul class="list-inline">
         <li>Time Limit: {{ problem.limit_time }}s</li>
         &nbsp;&nbsp;
-        <li>Memory Limit: {{ problem.limit_memory }} K</li>
+        <li>Memory Limit: {{ problem.limit_memory|filesizeformat }}</li>
     </ul>
 </div>
 
 <h3 class="text-info" >Description</h3>
+{% autoescape off %}
 <pre>{{ problem.content }}</pre>
+{% endautoescape %}
 
 <h3 class="text-info" >Input</h3>
 <pre>{{ problem.input }}</pre>

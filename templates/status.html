@@ -10,6 +10,8 @@
         <th>Problem</th>
         <th>Status</th>
         <th>Language</th>
+        <th>Time</th>
+        <th>Memory</th>
         <th>User</th>
         <th>SubmitTime</th>
     </tr>
@@ -29,13 +31,23 @@
             {% ifequal item.pid.isCCF True %}
                  <td>{{ item.score }}</td>
                 {% else %}
-                <td>{{ item.get_status_display }}</td>
+		{% ifequal item.get_status_display "Compilation Error" %}
+		    {% ifequal item.uid.id user.id %}
+			    <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_status_display }}</a></td>
+			    {% else %}
+				    <td>{{ item.get_status_display }}</td>
+		    {% endifequal %}
+                    {% else %}
+			    <td>{{ item.get_status_display }}</td>
+                {% endifequal %}
             {% endifequal %}
             {% ifequal item.uid.id user.id %}
                 <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></td>
             {% else %}
                 <td>{{ item.get_lang_display }}</td>
             {% endifequal %}
+            <td>{{ item.run_time }}ms</td>
+            <td>{{ item.run_memory }}KB</td>
             <td>{{ item.uid.username }}</td>
             <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>
         </tr>

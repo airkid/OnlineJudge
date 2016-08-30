@@ -20,11 +20,14 @@
           <div class="page-header">
             <h1>Source code</h1>
             <p>Problem:<a href="/problem/{{ submit.pid.id }}">{{ submit.pid.title }}</a>&nbsp;&nbsp;&nbsp;User:{{ submit.uid }}</p>
-            <p>Memory:{{ submit.run_memory }}B&nbsp;&nbsp;&nbsp;Time:{{ submit.run_time }}MS</p>
+	    <p>RunID:{{ submit.id }}&nbsp;&nbsp;&nbsp;Memory:{{ submit.run_memory }}KB&nbsp;&nbsp;&nbsp;Time:{{ submit.run_time }}ms</p>
             <p>Language:{{ submit.get_lang_display }}&nbsp;&nbsp;&nbsp;Result:{{ submit.get_status_display }}</p>
         </div>
       </center>
+      Source Code:
       <pre class="brush:{{ lang }}">{{ code }}</pre>
+      Compile Result:
+      <pre class="brush:{{ lang }}">{{ errinfo }}</pre>
     </div>
 
 <script type="text/javascript">

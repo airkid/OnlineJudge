@@ -1,23 +1,23 @@
+
 # coding=utf-8
 from OJ.models import *
 from subprocess import call, DEVNULL, Popen
 import threading
 import psutil
+import lorun
+import os
 import getpass
 import resource as res
 from threading import Thread, Event
 from queue import Queue
-from tempfile import TemporaryFile
+from tempfile import TemporaryFile, NamedTemporaryFile
 
-import os,signal
-import os.path
 
 FILE_PATH = '/home/sduacm/OnlineJudge/JudgeFiles/'
 TEMP_PATH = '/tmp/sduoj/'
 
 FILE_PATH = os.path.abspath(FILE_PATH)
 TEMP_PATH = os.path.abspath(TEMP_PATH)
-
 try:
     os.mkdir(FILE_PATH)
 except:
@@ -60,6 +60,49 @@ except:
 
 CHROOT_PATH = '/'
 
+def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit):
+    fin = open(in_path)
+    ftemp = open(user_path, 'w')
+    print('p_path:')
+    print(p_path)
+    
+    runcfg = {
+        #'args':['sudo','su','nobody','-c',p_path],
+        'args':[p_path],
+        'fd_in':fin.fileno(),
+        'fd_out':ftemp.fileno(),
+        'timelimit':int(time_limit*1000), #in MS
+        'memorylimit':int(memory_limit/1024+1024), #in KB
+    }
+    runcfg['trace'] = True
+    runcfg['calls'] = [0,1,2,3,5,9,10,11,12,21,59,158,231]
+    runcfg['files'] = {}
+    print('runcfg')
+    print(runcfg)
+    rst = lorun.run(runcfg)
+    print('result')
+    print(rst)
+    fin.close()
+    ftemp.close()
+    
+    if rst['result'] == 0:
+        ftemp = open(user_path, 'r')
+        output = ftemp.read().strip()
+        ftemp.close()
+        output = output.replace(chr(13),'')
+
+        fout = open(out_path,'r')
+        right = fout.read().strip()
+        fout.close()
+        right = right.replace(chr(13),'')
+        #os.remove('temp.out')
+        if right != output:
+            if ''.join(output.split()) == ''.join(right.split()):
+                #print('PE')
+                rst['result'] = 1
+            else:
+                rst['result'] = 4
+    return rst
 
 class Daemon:
     from os import cpu_count
@@ -197,7 +240,6 @@ class Complier(Daemon):
             print(cmd)
             cp = Popen(cmd)
             cp.wait()
-            os.remove(RESULT_PATH + self.id)
 
     def java(self):
         ori = ORIGIN_PATH + self.id
@@ -273,89 +315,118 @@ class Tester(Daemon):
                 res.setrlimit(res.RLIMIT_AS,(-1,-1))
             os.nice(10)
 
+
     def c(self):
         ofile = TemporaryFile('w+t')
         if self.ua:
             bin = ANSWER_PATH + self.id + '/c' + self.id
         else:
             bin = BINARY_PATH + self.id + '/c' + self.id
-        cmd = ['sudo','su','nobody','-c',bin]
-        print(cmd)
-        p = Popen(cmd, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.cpu_limit+0.5, self.memory_limit*2),universal_newlines=True, stderr=DEVNULL)
-        waitResult = os.wait4(p.pid,0)
-        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
-        self.memory_used = waitResult[2].ru_maxrss
-        # print(str(self.cpu_used)+'  '+str(self.memory_used))
-        self.return_status = waitResult[1]
-        print('WaitResult:')
-        print(waitResult)
-        # end with a signal
-        if os.WIFSIGNALED(self.return_status):
-            self.return_code = os.WTERMSIG(self.return_status)
-            if self.return_code == signal.SIGXCPU or self.cpu_used>self.cpu_limit :
-                self.cpu_used = self.cpu_limit
-                self.result = -5
-                # print('TLE')
-            elif self.return_code == signal.SIGSEGV:
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    self.result = -3
-                    # print('RE')
-            elif self.return_code == signal.SIGKILL:
-                # print('killed')
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    self.result = -3
-                    # print('RE')
-            else:
-                print('LOG NEW ERROR '+str(self.return_code))
-        # end with 0 or other error
-        else:
-            if self.return_status == 0:
-                if self.cpu_used>self.cpu_limit :
-                    self.cpu_used = self.cpu_limit
-                    self.result = -5
-                    # print('TLE')
-                elif self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    ofile.seek(0)
-                    ofile_string = str(ofile.read(-1)).strip()
-                    output_string = self.output.strip()
-                    ofile_string = ofile_string.replace(chr(13),'')
-                    output_string = output_string.replace(chr(13),'')
-                    # print(ofile_string+'  '+output_string)
-                    # for i in ofile_string:
-                        # print(ord(i))
-                    # for i in output_string:
-                        # print(ord(i))
-                    if ofile_string != output_string:
-                        if ''.join(ofile_string.split()) == ''.join(output_string.split()):
-                            self.result = -8
-                            # print('PE')
-                        else: 
-                            self.result = -7
-                            # print('WA')
-                    else:
-                        self.result = 0
-                        # print('AC')
-            else:
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                elif self.cpu_used>=self.cpu_limit :
-                    self.cpu_used = self.cpu_limit
-                    self.result = -5
-                    # print('TLE')
-                else:
-                    self.result = -3
-                    # print('RE')
 
+        in_path = self.ifile.name
+        out_path = self.ofile.name
+        user_path = self.userofile.name
+        rst = runone(bin, in_path, out_path, user_path, self.cpu_limit, self.memory_limit)
+
+        self.cpu_used = 0
+        self.memory_used = 0
+        self.cpu_used = rst['timeused']
+        self.memory_used = rst['memoryused']
+        if rst['result'] == 0:
+            self.result = 0 #Accept
+        if rst['result'] == 1: 
+            self.result = -8 #Presentation Error
+        if rst['result'] == 2: 
+            self.cpu_used = min(rst['timeused'],self.cpu_limit*1000)
+            self.result = -5 #Time Limit Exceeded
+        if rst['result'] == 3: 
+            self.memory_used = min(rst['memoryused'],self.memory_limit/1024)
+            self.result = -6 #Memory Limit Exceeded
+        if rst['result'] == 4: 
+            self.result = -7 #Wrong Answer
+        if rst['result'] == 5: 
+            self.result = -3 #Runtime Error
+        if rst['result'] == 6: 
+            self.result = -4 #Output Limit Exceeded
+        if rst['result'] == 7: 
+            self.result = -1 #Compile Error
+
+#        cmd = ['sudo','su','nobody','-c',bin]
+#        p = Popen(cmd, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.cpu_limit+0.5, self.memory_limit*2),universal_newlines=True, stderr=DEVNULL)
+#        waitResult = os.wait4(p.pid,0)
+#        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
+#        self.memory_used = waitResult[2].ru_maxrss
+#        # print(str(self.cpu_used)+'  '+str(self.memory_used))
+#        self.return_status = waitResult[1]
+#        print('WaitResult:')
+#        print(waitResult)
+#        # end with a signal
+#        if os.WIFSIGNALED(self.return_status):
+#            self.return_code = os.WTERMSIG(self.return_status)
+#            if self.return_code == signal.SIGXCPU or self.cpu_used>self.cpu_limit :
+#                self.cpu_used = self.cpu_limit
+#                self.result = -5
+#                # print('TLE')
+#            elif self.return_code == signal.SIGSEGV:
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
+#            elif self.return_code == signal.SIGKILL:
+#                # print('killed')
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
+#            else:
+#                print('LOG NEW ERROR '+str(self.return_code))
+#        # end with 0 or other error
+#        else:
+#            if self.return_status == 0:
+#                if self.cpu_used>self.cpu_limit :
+#                    self.cpu_used = self.cpu_limit
+#                    self.result = -5
+#                    # print('TLE')
+#                elif self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    ofile.seek(0)
+#                    ofile_string = str(ofile.read(-1)).strip()
+#                    output_string = self.output.strip()
+#                    ofile_string = ofile_string.replace(chr(13),'')
+#                    output_string = output_string.replace(chr(13),'')
+#                    # print(ofile_string+'  '+output_string)
+#                    # for i in ofile_string:
+#                        # print(ord(i))
+#                    # for i in output_string:
+#                        # print(ord(i))
+#                    if ofile_string != output_string:
+#                        if ''.join(ofile_string.split()) == ''.join(output_string.split()):
+#                            self.result = -8
+#                            # print('PE')
+#                        else: 
+#                            self.result = -7
+#                            # print('WA')
+#                    else:
+#                        self.result = 0
+#                        # print('AC')
+#            else:
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                elif self.cpu_used>=self.cpu_limit :
+#                    self.cpu_used = self.cpu_limit
+#                    self.result = -5
+#                    # print('TLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
+#
 
     def cxx(self):
         ofile = TemporaryFile('w+t')
@@ -363,87 +434,135 @@ class Tester(Daemon):
             bin = ANSWER_PATH + self.id + '/x' + self.id
         else:
             bin = BINARY_PATH + self.id + '/x' + self.id
-        #print('Current user:')
-        #print(getpass.getuser())
-        cmd = ['sudo','su','nobody','-c',bin]
-        #print(cmd)
-        p = Popen(cmd, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.cpu_limit+0.5, self.memory_limit*2),universal_newlines=True, stderr=DEVNULL)
-        waitResult = os.wait4(p.pid,0)
-        print('WaitResult:')
-        print(waitResult)
-        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
-        #  print(self.cpu_used)
-        self.memory_used = waitResult[2].ru_maxrss
-        print(' cpu_used:'+str(self.cpu_used)+' limit: '+str(self.cpu_limit))
-        print(' mem_used:'+str(self.memory_used)+' limit: '+str(self.memory_limit))
-        self.return_status = waitResult[1]
-        # print(waitResult)
-        # end with a signal
-        if os.WIFSIGNALED(self.return_status):
-            self.return_code = os.WTERMSIG(self.return_status)
-            if self.return_code == signal.SIGXCPU or self.cpu_used>self.cpu_limit :
-                self.cpu_used = self.cpu_limit
-                self.result = -5
-                # print('TLE')
-            elif self.return_code == signal.SIGSEGV:
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    self.result = -3
-                    # print('RE')
-            elif self.return_code == signal.SIGKILL:
-                # print('killed')
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    self.result = -3
-                    # print('RE')
-            else:
-                print('LOG NEW ERROR '+str(self.return_code))
-        # end with 0 or other error
-        else:
-            if self.return_status == 0:
-                if self.cpu_used>self.cpu_limit :
-                    self.cpu_used = self.cpu_limit
-                    self.result = -5
-                    # print('TLE')
-                elif self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                else:
-                    ofile.seek(0)
-                    ofile_string = str(ofile.read(-1)).strip()
-                    output_string = self.output.strip()
-                    ofile_string = ofile_string.replace(chr(13),'')
-                    output_string = output_string.replace(chr(13),'')
-                    # print(ofile_string+'  '+output_string)
-                    # for i in ofile_string:
-                        # print(ord(i))
-                    # for i in output_string:
-                        # print(ord(i))
-                    if ofile_string != output_string:
-                        if ''.join(ofile_string.split()) == ''.join(output_string.split()):
-                            self.result = -8
-                            # print('PE')
-                        else: 
-                            self.result = -7
-                            # print('WA')
-                    else:
-                        self.result = 0
-                        # print('AC')
-            else:
-                if self.memory_used > self.memory_limit:
-                    self.result = -6
-                    # print('MLE')
-                elif self.cpu_used>=self.cpu_limit :
-                    self.cpu_used = self.cpu_limit
-                    self.result = -5
-                    # print('TLE')
-                else:
-                    self.result = -3
-                    # print('RE')
+
+        in_path = self.ifile.name
+        out_path = self.ofile.name
+        user_path = self.userofile.name
+        print('memory:')
+        print(self.memory_limit);
+        rst = runone(bin, in_path, out_path, user_path, self.cpu_limit, self.memory_limit)
+        print('rst')
+        print(rst)
+
+
+        self.cpu_used = 0
+        self.memory_used = 0
+       # print('time consume:')
+       # print(rst['timeused'])
+       # print('time limit:')
+       # print(self.cpu_limit)
+       # print('memory consume:')
+       # print(rst['memoryused'])
+       # print('memory limit:')
+       # print(self.memory_limit)
+        
+        if rst['result'] == 0:
+            self.cpu_used = int(rst['timeused'])
+            self.memory_used = int(rst['memoryused'])
+           # print('cpu_used:')
+           # print(self.cpu_used)
+           # print('memory_used:')
+           # print(self.memory_used)
+            self.result = 0 #Accept
+        if rst['result'] == 1: 
+            self.cpu_used = rst['timeused']
+            self.memory_used = rst['memoryused']
+            self.result = -8 #Presentation Error
+        if rst['result'] == 2: 
+            self.cpu_used = min(rst['timeused'],self.cpu_limit*1000)
+            self.memory_used = rst['memoryused']
+            self.result = -5 #Time Limit Exceeded
+        if rst['result'] == 3: 
+            self.cpu_used = rst['timeused']
+            self.memory_used = min(rst['memoryused'],self.memory_limit/1024)
+            self.result = -6 #Memory Limit Exceeded
+        if rst['result'] == 4: 
+            self.cpu_used = rst['timeused']
+            self.memory_used = rst['memoryused']
+            self.result = -7 #Wrong Answer
+        if rst['result'] == 5: 
+            self.result = -3 #Runtime Error
+        if rst['result'] == 6: 
+            self.result = -4 #Output Limit Exceeded
+        if rst['result'] == 7: 
+            self.result = -1 #Compile Error
+
+
+#        cmd = ['sudo','su','nobody','-c',bin]
+#        p = Popen(cmd, stdin=self.ifile, stdout=ofile, preexec_fn=Tester.Limiter(self.cpu_limit+0.5, self.memory_limit*2),universal_newlines=True, stderr=DEVNULL)
+#        waitResult = os.wait4(p.pid,0)
+#        print(waitResult)
+#        self.cpu_used = waitResult[2].ru_utime + waitResult[2].ru_stime
+#        #  print(self.cpu_used)
+#        self.memory_used = waitResult[2].ru_maxrss
+#        self.return_status = waitResult[1]
+#        # print(waitResult)
+#        # end with a signal
+#        if os.WIFSIGNALED(self.return_status):
+#            self.return_code = os.WTERMSIG(self.return_status)
+#            if self.return_code == signal.SIGXCPU or self.cpu_used>self.cpu_limit :
+#                self.cpu_used = self.cpu_limit
+#                self.result = -5
+#                # print('TLE')
+#            elif self.return_code == signal.SIGSEGV:
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
+#            elif self.return_code == signal.SIGKILL:
+#                # print('killed')
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
+#            else:
+#                print('LOG NEW ERROR '+str(self.return_code))
+#        # end with 0 or other error
+#        else:
+#            if self.return_status == 0:
+#                if self.cpu_used>self.cpu_limit :
+#                    self.cpu_used = self.cpu_limit
+#                    self.result = -5
+#                    # print('TLE')
+#                elif self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                else:
+#                    ofile.seek(0)
+#                    ofile_string = str(ofile.read(-1)).strip()
+#                    output_string = self.output.strip()
+#                    ofile_string = ofile_string.replace(chr(13),'')
+#                    output_string = output_string.replace(chr(13),'')
+#                    # print(ofile_string+'  '+output_string)
+#                    # for i in ofile_string:
+#                        # print(ord(i))
+#                    # for i in output_string:
+#                        # print(ord(i))
+#                    if ofile_string != output_string:
+#                        if ''.join(ofile_string.split()) == ''.join(output_string.split()):
+#                            self.result = -8
+#                            # print('PE')
+#                        else: 
+#                            self.result = -7
+#                            # print('WA')
+#                    else:
+#                        self.result = 0
+#                        # print('AC')
+#            else:
+#                if self.memory_used > self.memory_limit:
+#                    self.result = -6
+#                    # print('MLE')
+#                elif self.cpu_used>=self.cpu_limit :
+#                    self.cpu_used = self.cpu_limit
+#                    self.result = -5
+#                    # print('TLE')
+#                else:
+#                    self.result = -3
+#                    # print('RE')
 
     def java(self):
         ofile = TemporaryFile('w+t')
@@ -522,9 +641,14 @@ class Tester(Daemon):
     def __init__(self, id, lang, input, output, cpu_limit, memory_limit, use_answer=False):
         self.id = str(id)
         self.lang = int(lang)
-        self.ifile = TemporaryFile(mode='w+t')
+        self.ifile = NamedTemporaryFile(mode='w+',suffix='.in')
         self.ifile.write(input)
         self.ifile.seek(0)
+        self.ofile = NamedTemporaryFile(mode='w+',suffix='.out')
+        self.ofile.write(str(output))
+        self.ofile.seek(0)
+        self.userofile = NamedTemporaryFile(mode='w+',suffix='.out')
+        self.userofile.seek(0)
         self.output = str(output)
         self.cpu_limit = cpu_limit
         self.memory_limit = memory_limit
@@ -579,26 +703,31 @@ class Judger(Daemon):
             if test.result:
                 over = True
                 self.__submit.status = test.result
-                self.__submit.run_time = test.cpu_used*1000
-                self.__submit.run_memory = test.memory_used/1024
+                self.__submit.run_time = test.cpu_used
+                self.__submit.run_memory = test.memory_used
                 # self.__submit.save()
         if not over:
             self.__submit.status = 0
             # use ms
-            self.__submit.run_time = testList[-1].cpu_used*1000
+            self.__submit.run_time = testList[-1].cpu_used
             # use kb
-            self.__submit.run_memory = testList[-1].memory_used/1024
+            self.__submit.run_memory = testList[-1].memory_used
             # print('save')
             # print(self.__submit.run_time)
             # print(self.__submit.run_memory)
             self.__submit.save()
         # print('over')
         # 递归删除二进制目录
+
+        for test in testList:
+            print('Removing tmpfile')
+            test.ifile.close()
+            test.ofile.close()
+            test.userofile.close()
         from shutil import rmtree
 
         rmtree(BINARY_PATH + self.id)
         cmd = ['sudo','rm','-rf','/jail'+BINARY_PATH+self.id]
-        print(cmd)
         cp = Popen(cmd)
         cp.wait()
         print('Result is '+str(self.status))

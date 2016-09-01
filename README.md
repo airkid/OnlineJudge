@@ -20,15 +20,8 @@ tle -24
 1. status page
 1. contest system
 
-##Update 2016-7-25 11:30:29
-register时添加空UserInfo
-Problem界面Description自动换行
-CCF格式题目返回值
+##Update 2016-9-1 09:56:56
+1. register时添加空UserInfo
+1. CCF格式题目返回值
 
-##Update 2016-7-26 09:30:23
-代码中无法添加中文注释
-题目中的rank、discuss界面
-MathJax插件
-status中的Memory,Time,CodeLength列
-Syntax Error --> Compile Error?
 

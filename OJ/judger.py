@@ -183,6 +183,7 @@ class Complier(Daemon):
             dst = BINARY_PATH + self.id
         try:
             os.mkdir(dst)
+            os.system("sudo chmod 777 %s"%dst)
         except:
             pass
         dst += '/c' + self.id
@@ -212,9 +213,9 @@ class Complier(Daemon):
             # compilation error
             self.result = -1
         else:
-            cmd = ['sudo','jk_cp','-j','/jail',dst]
-            cp = Popen(cmd)
-            cp.wait()
+            #cmd = ['sudo','jk_cp','-j','/jail',dst]
+            #cp = Popen(cmd)
+            #cp.wait()
             os.remove(RESULT_PATH + self.id)
 
     def cxx(self):
@@ -227,6 +228,7 @@ class Complier(Daemon):
             dst = BINARY_PATH + self.id
         try:
             os.mkdir(dst)
+            os.system("sudo chmod 777 %s"%dst)
         except:
             pass
         dst += '/x' + self.id
@@ -246,10 +248,11 @@ class Complier(Daemon):
         elif self.result < 0:
             self.result = -1
         else:
-            cmd = ['sudo','jk_cp','-j','/jail',dst]
-            print(cmd)
-            cp = Popen(cmd)
-            cp.wait()
+            #cmd = ['sudo','jk_cp','-j','/jail',dst]
+            #print(cmd)
+            #cp = Popen(cmd)
+            #cp.wait()
+            os.remove(RESULT_PATH + self.id)
 
     def java(self):
         ori = ORIGIN_PATH + self.id
@@ -448,11 +451,11 @@ class Tester(Daemon):
         in_path = self.ifile.name
         out_path = self.ofile.name
         user_path = self.userofile.name
-        print('memory:')
-        print(self.memory_limit);
+        #print('memory:')
+        #print(self.memory_limit);
         rst = runone(bin, in_path, out_path, user_path, self.cpu_limit, self.memory_limit)
-        print('rst')
-        print(rst)
+        #print('rst')
+        #print(rst)
 
 
         self.cpu_used = 0
@@ -648,7 +651,7 @@ class Tester(Daemon):
         java,
     ]
 
-    def __init__(self, id, lang, input, output, cpu_limit, memory_limit, use_answer=False):
+    def __init__(self, id, lang, input, output, cpu_limit, memory_limit, score, use_answer=False):
         self.id = str(id)
         self.lang = int(lang)
         self.ifile = NamedTemporaryFile(mode='w+',suffix='.in')
@@ -662,6 +665,7 @@ class Tester(Daemon):
         self.output = str(output)
         self.cpu_limit = cpu_limit
         self.memory_limit = memory_limit
+        self.score = score
         # for java, give extra 25M, double the original cpu time
         if self.lang == 3:
             self.memory_limit = memory_limit + 26214400
@@ -703,44 +707,60 @@ class Judger(Daemon):
         caseList = TestCase.objects.filter(pid__exact=self.__submit.pid)
         testList = []
         for case in caseList:
-            testList.append(Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem))
-        over = False
+            testList.append(Tester(self.id, self.lang, case.input, case.output, self.lcpu, self.lmem, case.score))
+        erroroccur = False
         for test in testList:
-            if over:
-                test.cancel()
-                continue
             test.wait()
             if test.result:
-                over = True
+                if erroroccur:
+                    test.cancel()
+                    continue
+                erroroccur = True
+                errortest = test
                 self.__submit.status = test.result
                 self.__submit.run_time = test.cpu_used
                 self.__submit.run_memory = test.memory_used
                 # self.__submit.save()
-        if not over:
-            self.__submit.status = 0
-            # use ms
-            self.__submit.run_time = testList[-1].cpu_used
-            # use kb
-            self.__submit.run_memory = testList[-1].memory_used
-            # print('save')
-            # print(self.__submit.run_time)
-            # print(self.__submit.run_memory)
-            self.__submit.save()
+            else:
+                self.__submit.status = test.result
+                self.__submit.run_time = test.cpu_used
+                self.__submit.run_memory = test.memory_used
+                self.__submit.score += test.score
+                #print('score:')
+                #print(self.__submit.score)
+        if erroroccur:
+            self.__submit.status = errortest.result
+            self.__submit.run_time = errortest.cpu_used
+            self.__submit.run_memory = errortest.memory_used
+        self.__submit.save()
+
+
+    #    if not over:
+    #        test = testList[-1]
+    #        self.__submit.status = 0
+    #        # use ms
+    #        self.__submit.run_time = testList[-1].cpu_used
+    #        # use kb
+    #        self.__submit.run_memory = testList[-1].memory_used
+    #        # print('save')
+    #        # print(self.__submit.run_time)
+    #        # print(self.__submit.run_memory)
+    #        self.__submit.save()
         # print('over')
         # 递归删除二进制目录
 
         for test in testList:
-            print('Removing tmpfile')
+            #print('Removing tmpfile')
             test.ifile.close()
             test.ofile.close()
             test.userofile.close()
-        from shutil import rmtree
 
+        from shutil import rmtree
         rmtree(BINARY_PATH + self.id)
-        cmd = ['sudo','rm','-rf','/jail'+BINARY_PATH+self.id]
-        cp = Popen(cmd)
-        cp.wait()
-        print('Result is '+str(self.status))
+        #cmd = ['sudo','rm','-rf','/jail'+BINARY_PATH+self.id]
+        #cp = Popen(cmd)
+        #cp.wait()
+        #print('Result is '+str(self.status))
 #        cmd = ['rm','-r','/jail/tmp/sduoj/binary/'+self.id]
 #        rm = Popen(cmd)
 #        rm.wait()
@@ -748,16 +768,16 @@ class Judger(Daemon):
         #try是尝试过的总次数，ac是正确的题目数
 
         # problem_try = Submit.objects.filter(uid=self.__submit.uid,status=1).count()
-        print(self.__submit.uid.info)
+        #print(self.__submit.uid.info)
         problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
         self.__submit.uid.info.problem_try = problem_try + 1
-        print("try is ")
-        print(problem_try)
+        #print("try is ")
+        #print(problem_try)
 
         if (self.__submit.status == 0):
             problem_ac = Submit.objects.filter(pid=self.__submit.pid, uid=self.__submit.uid, status=0).count()
-            print("   ac is ")
-            print(problem_ac)
+            #print("   ac is ")
+            #print(problem_ac)
             if(problem_ac == 0):
                 self.__submit.uid.info.problem_ac = self.__submit.uid.info.problem_ac + 1
 

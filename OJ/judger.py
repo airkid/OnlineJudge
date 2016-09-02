@@ -194,8 +194,17 @@ class Complier(Daemon):
             os.symlink(ori, src)
         except:
             pass
-        cmd = ['gcc', '-o', dst, src, '-O2']
-        self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
+        print('src:')
+        print(src)
+        print('dst:')
+        print(dst)
+        cmd = 'gcc %s -o %s -fno-asm -Wall -lm -std=c99 -DONLINE_JUDGE -O2'%(src,dst)
+        sudocmd = 'sudo su compileuser -c \'%s\''%cmd
+        print('cmd:')
+        print(cmd)
+        print('sudocmd:')
+        print(sudocmd)
+        self.result = call(sudocmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'),shell=True)
         if self.result > 0:
             # syntax error
             self.result = -1
@@ -229,8 +238,9 @@ class Complier(Daemon):
             os.symlink(ori, src)
         except:
             pass
-        cmd = ['g++', '-o', dst, src, '-O2']
-        self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
+        cmd = 'g++ %s -o %s -fno-asm -Wall -lm -std=c++0x -DONLINE_JUDGE -O2'%(src,dst)
+        sudocmd = 'sudo su compileuser -c \'%s\''%cmd
+        self.result = call(sudocmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'),shell=True)
         if self.result > 0:
             self.result = -1
         elif self.result < 0:

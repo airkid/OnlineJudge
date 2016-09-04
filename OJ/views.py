@@ -81,6 +81,8 @@ def register(req):
                 newuser.username = name
                 newuser.set_password(pw1)
                 newuser.save()
+                newinfo = UserInfo(id=newuser)
+                newinfo.save()
                 newuser = auth.authenticate(username=name, password=pw1)
                 auth.login(req, user=newuser)
                 next = req.session.get('next')

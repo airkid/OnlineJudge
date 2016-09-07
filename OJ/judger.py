@@ -297,7 +297,7 @@ class Complier(Daemon):
             pass
         # print(dst)
         # print(src)
-        cmd = ['javac', '-d', dst, src]
+        cmd = ['javac', '-J-Duser.language=en ', '-d', dst, src]
         self.result = call(cmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'))
         if self.result > 0:
             self.result = -1
@@ -752,7 +752,7 @@ class Judger(Daemon):
         if c.result:
             print("compile result is"+str(c.result))
             self.__submit.status = c.result
-            self.__submit.save()
+            #self.__submit.save()
             return
         caseList = TestCase.objects.filter(pid__exact=self.__submit.pid)
         testList = []
@@ -782,7 +782,7 @@ class Judger(Daemon):
             self.__submit.status = errortest.result
             self.__submit.run_time = errortest.cpu_used
             self.__submit.run_memory = errortest.memory_used
-        self.__submit.save()
+        #self.__submit.save()
 
 
     #    if not over:
@@ -821,18 +821,16 @@ class Judger(Daemon):
         #print(self.__submit.uid.info)
         problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
         self.__submit.uid.info.problem_try = problem_try + 1
-        #print("try is ")
-        #print(problem_try)
-
+        print("try is ")
+        print(problem_try)
         if (self.__submit.status == 0):
-            problem_ac = Submit.objects.filter(pid=self.__submit.pid, uid=self.__submit.uid, status=0).count()
-            #print("   ac is ")
-            #print(problem_ac)
-            if(problem_ac == 0):
-                self.__submit.uid.info.problem_ac = self.__submit.uid.info.problem_ac + 1
-
+            problem_ac=Submit.objects.filter(pid=self.__submit.pid, uid=self.__submit.uid, status=0).count()
+            if(problem_ac != 0):
+                print('problem %s has been ACed by %s for %s times'%(str(self.__submit.pid),str(self.__submit.uid),str(problem_ac)))
+            else:
+                print('adding num.ac')
+                self.__submit.uid.info.problem_ac += 1
         self.__submit.uid.info.save()
-
         self.__submit.save()
 
 Judger.init()

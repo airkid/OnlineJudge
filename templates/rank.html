@@ -6,19 +6,21 @@
 
 {% block list %}
     <tr>
-        <th>Rank</th>
-        <th>Name</th>
-        <th>Accept</th>
-        <th>Submit</th>
-        <th>Rate</th>
+        <th><center>Rank</center></th>
+        <th><center>Account</center></th>
+	<th><center>Name</center></th>
+        <th><center>Accept</center></th>
+        <th><center>Submit</center></th>
+        <th><center>Rate</center></th>
     </tr>
     {% for item in list %}
         <tr>
-            <th> {{forloop.counter}} </th>
-            <th> {{item.id}} </th>
-            <th> {{item.problem_ac}} </th>
-	    <th> <a href="/status/?search={{ item.id }}">{{item.problem_try}} </a></th>
-            <th> {{item.problem_ac}}/{{item.problem_try}} </th>
+            <th><center> {{forloop.counter}} </center></th>
+            <th><center> {{item.id}} </center></th>
+            <th><center> {{item.nickname}} </center></th>
+            <th><center> {{item.problem_ac}} </center></th>
+	    <th><center> <a href="/status/?search={{ item.id }}">{{item.problem_try}} </a></center></th>
+            <th><center> {{item.problem_ac}}/{{item.problem_try}} </center></th>
         </tr>
     {% endfor %}
 {% endblock %}

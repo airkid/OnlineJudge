@@ -1,11 +1,16 @@
 {% extends "problem/problem_base.html" %}
 
 {% block detail %}
-
+    <style type="text/css">
+	pre{
+		word-break: keep-all;
+		word-wrap: break-word;
+		white-space: pre-wrap;
+	} 
+    </style>
     <h3 class="text-info">Description</h3>
     {% autoescape off %}
     <pre>{{ problem.content }}</pre> 
-    {% endautoescape %}
 
 
     <h3 class="text-info">Input</h3>
@@ -13,6 +18,7 @@
 
     <h3 class="text-info">Output</h3>
     <pre>{{ problem.output }}</pre>
+    {% endautoescape %}
 
     {% if problem.samples %}
         {% for s in problem.samples %}
@@ -25,7 +31,9 @@
     {% endif %}
 
     <h3 class="text-info" >Note</h3>
+    {% autoescape off %}
     <pre>{{ problem.note }}</pre>
+    {% endautoescape %}
 
     <h3 class="text-info">Source</h3>
     <pre>{{ problem.source }}</pre>

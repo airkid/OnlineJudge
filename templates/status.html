@@ -6,14 +6,14 @@
 
 {% block list %}
     <tr>
-        <th>RunID</th>
-        <th>Problem</th>
-        <th>Status/Score</th>
-        <th>Language</th>
-        <th>Time</th>
-        <th>Memory</th>
-        <th>User</th>
-        <th>SubmitTime</th>
+        <th><center>RunID</center></th>
+        <th><center>Problem</center></th>
+        <th><center>Status/Score</center></th>
+        <th><center>Language</center></th>
+        <th><center>Time</center></th>
+        <th><center>Memory</center></th>
+        <th><center>User</center></th>
+        <th><center>SubmitTime</center></th>
     </tr>
     {% for item in list %}
         <tr
@@ -26,30 +26,30 @@
                     class="danger"
                 {% endifequal %}
          >
-            <td>{{ item.id }}</td>
-            <td><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></td>
+            <td><center>{{ item.id }}</center></td>
+            <td><center><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></center></td>
             {% ifequal item.pid.isCCF True %}
-                 <td>{{ item.score }}</td>
+                 <td><center>{{ item.score }}</center></td>
                 {% else %}
 		{% ifequal item.get_status_display "Compilation Error" %}
 		    {% ifequal item.uid.id user.id %}
-			    <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_status_display }}</a></td>
+			    <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_status_display }}</a></center></td>
 			    {% else %}
-				    <td>{{ item.get_status_display }}</td>
+				    <td><center>{{ item.get_status_display }}</center></td>
 		    {% endifequal %}
                     {% else %}
-			    <td>{{ item.get_status_display }}</td>
+			    <td><center>{{ item.get_status_display }}</center></td>
                 {% endifequal %}
             {% endifequal %}
             {% ifequal item.uid.id user.id %}
-                <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></td>
+                <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
             {% else %}
-                <td>{{ item.get_lang_display }}</td>
+                <td><center>{{ item.get_lang_display }}</center></td>
             {% endifequal %}
-            <td>{{ item.run_time }}ms</td>
-            <td>{{ item.run_memory }}KB</td>
-            <td>{{ item.uid.username }}</td>
-            <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>
+            <td><center>{{ item.run_time }}ms</center></td>
+            <td><center>{{ item.run_memory }}KB</center></td>
+            <td><center>{{ item.uid.username }}</center></td>
+            <td><center>{{ item.time | date:"Y-m-d H:i:s" }}</center></td>
         </tr>
     {% endfor %}
 {% endblock %}

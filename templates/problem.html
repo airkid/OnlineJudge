@@ -11,19 +11,19 @@
 <col width="12%" />
 <col width="20%" />
 <tr>
-    <th>ID</th>
-    <th>Title</th>
-    <th>Accepted/Submit</th>
-    <th>Author</th>
-    <th>Upload</th>
+    <th><center>ID</center></th>
+    <th><center>Title</center></th>
+    <th><center>Accepted/Submit</center></th>
+    <th><center>Author</center></th>
+    <th><center>Upload</center></th>
 </tr>
 {% for item in list %}
 <tr>
-    <th>{{ item.id }}</th>
-    <th><a href="/problem/{{ item.id }}">{{ item.title }}</a></th>
-    <th><a href="/status?pid={{ item.id }}">{{ item.accepted }}/{{ item.submitted }}</a></th>
-    <th>{{ item.uid }}</th>
-    <th>{{ item.create_time | date:"Y-m-d" }}</th>
+    <th><center>{{ item.id }}</center></th>
+    <th><center><a href="/problem/{{ item.id }}">{{ item.title }}</a></center></th>
+    <th><center><a href="/status?pid={{ item.id }}">{{ item.accepted }}/{{ item.submitted }}</a></center></th>
+    <th><center>{{ item.uid }}</center></th>
+    <th><center>{{ item.create_time | date:"Y-m-d" }}</center></th>
 </tr>
 {% endfor %}
 {% endblock %}

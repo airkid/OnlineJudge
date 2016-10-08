@@ -245,8 +245,22 @@ def contest_status(req, cid):
     if req.is_ajax():
         t = loader.get_template('contest/contest_status.html')
         status_list = Submit.objects.filter(cid=cid).order_by('-time')
-        content_html = t.render(Context({'status_list': status_list, 'user' : req.user}))
+
+        pg = req.GET.get('pg')
+        if not pg:
+            pg = 1
+        pg = int(pg)
+
+        max_cnt = status_list.count() // 20 + 1
+        start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
+        end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
+
+        lst = status_list[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+
+        content_html = t.render(Context({'status_list': lst, 'page': range(start, end + 1), 'contest_id': cid, 'user': req.user}))
         return HttpResponse(content_html)
+    else:
+        raise Http404
 
 
 @login_required

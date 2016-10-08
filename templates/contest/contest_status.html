@@ -41,3 +41,26 @@
     {% endfor %}
     </tbody>
 </table>
+<center>
+<ul class="pagination">
+    <script type="text/javascript">
+        //$(document).ready(function () {
+        function request_contest_status(pg){
+            $.ajax({
+                    type: 'get',
+                    url: "/contest/" + {{ contest_id }} + "/status/?pg=" + pg,
+                    success: function (responseData) {
+                        $('#panel-status').html(responseData);
+                    }
+            })
+        }
+    </script>
+    {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}"
+               href="javascript:request_contest_status({{ id }});">
+            {{ id }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>
+</center>

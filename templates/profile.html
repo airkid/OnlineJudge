@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block navbar %}{% include "include/navbar.html" %}{% endblock %}
+
+{% block header %}
+<h1>User Profile</h1>
+{% endblock %}
+
+{% block content %}
+
+<form class="form-horizontal container-fluid" action="/profile/" method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>Account:</label>
+                <input type="text" class="form-control" name="name" disabled=1 value={{ user.name }}>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+		<label>Nickname:</label>
+                <input type="text" class="form-control" name="nickname" value='{{ user.nickname }}'>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>School:</label>
+                <input type="text" class="form-control" name="school" value='{{ user.school }}'>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>StudentID:</label>
+                <input type="text" class="form-control" name="sid" value={{ user.sid }}>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+		    <label>Password<strong><font color="red">*</font></strong>:</label>
+                <input type="password" class="form-control" name="pw">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>New Password:</label>
+                <input type="password" class="form-control" name="npw1">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>Confirm New Password:</label>
+                <input type="password" class="form-control" name="npw2">
+            </div>
+        </div>
+    </div>
+    <center><button type="submit" class="btn btn-primary">Update</button></center>
+</form>
+
+{% endblock %}

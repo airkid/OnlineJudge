@@ -1,0 +1,4 @@
+<ifmodule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^/(.*) http://acm.sdu.edu.cn/$1 [R,L]
+</ifmodule>

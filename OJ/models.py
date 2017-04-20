@@ -59,11 +59,23 @@ class Problem(models.Model):
 class UserInfo(models.Model):
     id = models.OneToOneField(User, primary_key=True, related_name='info')
     school = models.CharField(max_length=50, blank=True)
+    sid = models.CharField(max_length=50, blank=True)
+    nickname = models.CharField(max_length=50, blank=True)
     problem_ac = models.IntegerField(default = 0)
     problem_try = models.IntegerField(default = 0)
+    problems_ac = models.ManyToManyField(Problem, related_name='aceduser')
+    problems_try = models.ManyToManyField(Problem, related_name='trieduser')
 
     def __str__(self):
         return str(self.id)
+    def cnt_ac(self):
+        return self.problems_ac.count()
+    def cnt_try(self):
+        return self.problems_try.count()
+    def ratio(self):
+        if self.problem_try==0:
+            return 0
+        return int(self.problem_ac/self.problem_try*100)
 
 # class ProblemsAC(models.Model):
 #     uid = models.ForeignKey(UserInfo);
@@ -94,10 +106,15 @@ class TestCase(models.Model):
 
 class Contest(models.Model):
     uid = models.ForeignKey(User)
-    name = models.CharField(max_length=254)
+    name = models.CharField(max_length=256)
     start_time = models.DateTimeField()
     duration_time = models.DurationField()
     problems = models.ManyToManyField(Problem, related_name="contests")
+    rank = models.TextField(default="{}")   #cached rank
+    last_submit_id = models.IntegerField(default = 0)   #last submit id add to rank
+    private = models.BooleanField(default=False)
+    password = models.CharField(max_length=256,blank=True)
+    accounts = models.ManyToManyField(UserInfo, related_name="accessable_contests",blank=True)
 #    users = models.ManyToManyField(User, related_name="contests")
 
     def __str__(self):
@@ -150,7 +167,7 @@ class Submit(models.Model):
     score = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.pid) + '  ' + str(self.uid) + '  ' + str(self.lang) + '  ' + str(self.cid)
+        return str(self.id)+' '+str(self.pid) + ' ' + str(self.uid) + ' ' + str(self.lang) + ' ' + str(self.cid)
 
     class Meta:
         ordering = ['time']

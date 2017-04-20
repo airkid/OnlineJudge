@@ -24,8 +24,8 @@ $(document).ready(function(){
           <option value="1">C</option>
           <option value="2">C++</option>
           <option value="3">Java</option>
-          <option value="4">Python</option>
-          <option value="5">Pascal</option>
+<!--          <option value="4">Python</option>
+	  <option value="5">Pascal</option> -->
         </select>
     </div>
     <div class="form-group">
@@ -38,7 +38,12 @@ $(document).ready(function(){
     </div>
     <div class="form-group">
         <label><input type="radio" id="selsrc" name="inputype" checked="checked">  Source Code:</label>
-        <textarea id="srcarea" name="code" class="form-control" maxlength="2000" rows="24"></textarea>
+        <textarea id="srcarea" name="code" class="form-control" maxlength="65536" rows="24"></textarea>
     </div>
+    {% if user.sid %}
     <button id="submit_button" class="btn btn-primary">Submit</button>
+    {% else %}
+    <!--    <button id="submit_button" class="btn btn-primary">Submit_</button>-->
+    <a href="/profile/" target="_blank">Update Your StudentID Before Submit</a>
+    {% endif %}
 </form>

@@ -27,13 +27,21 @@
             <td>{{ item.pid.title }}</td>
             {% ifequal item.pid.isCCF True %}
                  <td>{{ item.score }}</td>
-                {% else %}
-                <td>{{ item.get_status_display }}</td>
+	    {% else %}
+		    {% ifequal item.get_status_display "Compilation Error"%}
+			<td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_status_display }}</a></td>
+		    {% else %}
+			<td>{{ item.get_status_display }}</td>
+		    {% endifequal %}
             {% endifequal %}
             {% ifequal item.uid.id user.id %}
                 <td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></td>
             {% else %}
-                <td>{{ item.get_lang_display }}</td>
+		    {% ifequal user.is_staff True %}
+			<td><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></td>
+		    {% else %}
+			<td>{{ item.get_lang_display }}</td>
+		    {% endifequal %}
             {% endifequal %}
             <td>{{ item.uid.username }}</td>
             <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>

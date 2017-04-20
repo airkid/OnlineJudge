@@ -19,7 +19,13 @@
 </tr>
 {% for item in list %}
 <tr>
-    <th><center>{{ item.id }}</center></th>
+    {%if item.id in aclst%}
+	<th><center><font color="#008000">{{item.id}}</font></center></th>
+    {%elif item.id in trylst%}
+	<th><center><font color="#FFA500">{{item.id}}</font></center></th>
+    {%else%}
+	<th><center>{{item.id}}</center></th>
+    {%endif%}
     <th><center><a href="/problem/{{ item.id }}">{{ item.title }}</a></center></th>
     <th><center><a href="/status?pid={{ item.id }}">{{ item.accepted }}/{{ item.submitted }}</a></center></th>
     <th><center>{{ item.uid }}</center></th>

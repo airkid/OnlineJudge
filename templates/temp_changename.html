@@ -1,0 +1,16 @@
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+        <title>临时使用，修改账号</title>
+	</head>
+		<body>
+		    <label>{{ err }}</label>
+			<form action="/change_name/" method="POST">
+				{% csrf_token %}
+				<label>You need to change account name:</label>
+				<input type="text" class="form-control" name="name">
+				<button type="submit" class="btn btn-primary">Submit</button>
+			</form>
+		</body>
+	</html>
+

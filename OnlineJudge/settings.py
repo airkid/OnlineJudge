@@ -27,7 +27,7 @@ SECRET_KEY = 'uxel0_!g%a*dt4lhijguccv!-_ta@1tu_at_o4f*bv5ail^)4$'
 
 #DEBUG = False
 DEBUG = True
-ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'sduoj.org']
+ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'sduoj.org', 'acm.sdu.edu.cn']
 # ALLOWEDHOSTS = ['*']
 
 DEFAULT_CHARSET = 'utf-8'
@@ -48,7 +48,7 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -91,7 +91,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'oj',
         'USER': 'oj',
-        'PASSWORD': 'oj',
+        'PASSWORD': 'pbOk7Yi2QSDGPuQr',
     }
 }
 
@@ -101,7 +101,8 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-# TIME_ZONE = 'UTC'
+#TIME_ZONE = 'UTC+8'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -115,7 +116,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = "./static/"
+#STATIC_ROOT = "./static/" #Error when loading from other dir
+STATIC_ROOT = "/home/sduacm/OnlineJudge/static/"
 
 MEDIA_DIR='media/'
 
@@ -123,7 +125,6 @@ FILE_UPLOAD_MAX_MEMORY_SIZE=2560
 
 LOGIN_URL='/login/'
 
-TIME_ZONE = 'Asia/Shanghai'
 
 LOGGING = {
     'version': 1,
@@ -149,3 +150,15 @@ LOGGING = {
         }
     }
 }
+#CACHES = {
+#    'default': {
+#        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
+#        'LOCATION': 'localhost:11211',
+#        'TIMEOUT': 500,
+#        'BINARY': True,
+#        'OPTIONS': {  # Maps to pylibmc "behaviors"
+#            'tcp_nodelay': True,
+#            'ketama': True
+#        }
+#    }
+#}

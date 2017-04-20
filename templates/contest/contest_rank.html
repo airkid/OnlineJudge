@@ -30,16 +30,28 @@
             dataType: "json",
             success: function(data){
                 $("#rank_table tr").remove();
-                thHTML = "<tr><th class=\"text-center\">Rank</th><th class=\"text-center\">UserID</th><th class=\"text-center\">Solve</th><th class=\"text-center\">Penalty</th>"
+                thHTML = "<tr><th class=\"text-center\">Rank</th><th class=\"text-center\">ID</th><th class=\"text-center\">Solve</th><th class=\"text-center\">Penalty</th>"
                 $.each(data.statsinfo, function(i, item){
                     thHTML += "<th class=\"text-center\">" + item.probid + "</th>";
                 });
                 thHTML += "</tr>";
                 $("#rank_table thead").append(thHTML);
                 rank_num = 0;
+		var last_solved = -1;
+		var last_penalty = -1;
+		var rank_list=[];
                 $.each(data, function(i, item) {
                     if (item != data.statsinfo) {
-                        rank_num += 1;
+			    rank_list.push(item);
+		    }
+	    	});
+	    	rank_list.sort(function(a,b){return a.solved==b.solved?a.penalty-b.penalty:b.solved-a.solved;});
+                $.each(rank_list, function(i, item) {
+                    if (item != data.statsinfo) {
+		    	if(item.solved!=last_solved || item.penalty!=last_penalty)
+                            rank_num += 1;
+			last_solved=item.solved;
+			last_penalty=item.penalty;
                         trHTML = "<tr><td style=\"align:center;\">" + rank_num +
                         "</td><td class=\"text-center\">" + item.name +
                         "</td><td>" + item.solved +
@@ -49,7 +61,7 @@
                                 if (pitem.failNum == 0) {
                                     trHTML += "<td></td>";
                                 } else {
-                                    trHTML += "<td style=\"background-color: black; color:white;\"><br><span>(-" + pitem.failNum + ")</span></td>";
+                                    trHTML += "<td style=\"background-color: red; color:white;\"><br><span>(-" + pitem.failNum + ")</span></td>";
                                 }
                             } else {
                                 if (pitem.failNum == 0) {
@@ -78,7 +90,7 @@
 
 
     $(document).ready(function () {
-        refreshRankList();
-        setInterval(refreshRankList(),10000);
+	refreshRankList();
+	//setInterval(function(){refreshRankList();},10000);
     })
 </script>

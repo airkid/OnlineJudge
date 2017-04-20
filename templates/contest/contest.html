@@ -5,12 +5,10 @@
 {% block navbar %}{% include "include/navbar-contest.html" %}{% endblock %}
 
 {% block header %}
-
     <h1 class="text-center text-info">{{ contest.name }}</h1>
     <ul class="text-center" style="list-style:none;">
         <li>Start Time: {{ contest.start_time }} &nbsp;&nbsp;Duration Time: {{ contest.duration_time }}</li>
-        <li>Contest type: Private &nbsp;&nbsp;Contest Status: running</li>
-        <li id="current">Current Time: 2015-11-18 13:00:00</li>
+	<li id="current">Current Time: 1970-01-01 00:00:00</li>
     </ul>
 
 <div id="current2" style="width: 0%; text-align: right; float; left;"><span></span></div>
@@ -19,8 +17,32 @@
     </div>
 </div>
 <script type="text/javascript">
+function getServerTime(){  
+//     return new Date()
+     return new Date($.ajax({async: false}).getResponseHeader("Date"));
+//     var xmlHttp = false;  
+//     try {  
+//       xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");  
+//     } catch (e) {  
+//       try {  
+//          xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");  
+//       } catch (e2) {  
+//          xmlHttp = false;  
+//       }  
+//     }  
+//     if (!xmlHttp && typeof XMLHttpRequest != 'undefined') {  
+//       xmlHttp = new XMLHttpRequest();  
+//     }  
+//     xmlHttp.open("GET", window.location.href.toString(), false);  
+//     xmlHttp.setRequestHeader("Range", "bytes=-1");  
+//     xmlHttp.send(null);  
+//     var severtime=new Date(xmlHttp.getResponseHeader("Date"));  
+//     return severtime  
+}  
     var start;
     var duration;
+    var current;
+    var servertime;
     $(document).ready(function () {
          $.ajax({
              type: "post",
@@ -29,12 +51,13 @@
              success: function(data){
                 start=new Date(data.start);
                 duration=data.duration;
-                setInterval(function(){refreshtime(start, new Date());},1000);
+                syncServerTime();
+                setInterval(function(){syncServerTime();},1000*60);
+                setInterval(function(){refreshtime(start);},1000);
              }
          });
 
-
-});
+    });
 
     function str_pad_left(string,pad,length) {
         return (new Array(length+1).join(pad)+string).slice(-length);
@@ -43,19 +66,21 @@
     function secondsToTime(secs)
     {
         var hours = Math.floor(secs / (60 * 60));
-
         var divisor_for_minutes = secs % (60 * 60);
         var minutes = Math.floor(divisor_for_minutes / 60);
-
         var divisor_for_seconds = divisor_for_minutes % 60;
         var seconds = Math.ceil(divisor_for_seconds);
-
         return hours + ":" + str_pad_left(minutes,'0',2)+':'+str_pad_left(seconds,'0',2);;
     }
-    function refreshtime(start,current){
-        var current=new Date();
+    function syncServerTime(){
+    	servertime=getServerTime();
+    	current=servertime;
+    }
+    function refreshtime(start){
+        var tmpTime = current.getTime();
+        current.setTime(tmpTime+1000);
         var elapsed;
-        elapsed=(current.getTime()-start.getTime())/1000;
+        elapsed=(current-start.getTime())/1000;
         var cutdown;
         cutdown=duration-elapsed;
         var elapsedrate;
@@ -63,29 +88,31 @@
         elapsedrate=(elapsed/duration)*100+"%";
         var cutdowntime= secondsToTime(cutdown);
         $("#current").html("Current Time: "+current);
-        $("#current2").html("<span></span>");
         if(elapsed>duration){
+	    $("#current2").html("<span></span>");
             $("#current2").css("width", "101%");
             $("#progress").css("width", "100%");
-        } else if(elapsed<=0){
+        } else if(elapsed<0){
+            $("#current2").html("<span>-"+(secondsToTime(-elapsed))+"</span>");
             $("#current2").css("width", "1%");
             $("#progress").css("width", "0%");
         } else {
+            $("#current2").html("<span>"+cutdowntime+"</span>");
             $("#current2").css("width", elapsedrate2);
             $("#progress").css("width", elapsedrate);
+        } 
+        if(elapsed==0){
+            parent.location.reload();
         }
+        
 
-        $("#current").html("Current Time: "+current);
-        $("#current2").html("<span>"+cutdowntime+"</span>");
 
 
     }
 
 </script>
-
 {% endblock %}
 {% block content %}
-
     <div class="tabbable" id="contest_content">
         <ul class="nav nav-tabs">
             <li class="active">
@@ -101,8 +128,12 @@
                 <a data-toggle="tab" href="#panel-submit">Submit</a>
             </li>
             <li>
-                <a data-toggle="tab" href="#panel-rank">Rank</a>
+                <a data-toggle="tab" href="#panel-rank" id="get_rank">Rank</a>
             </li>
+            <li>
+                <a data-toggle="tab" href="#panel-clar" id="get_rank">Clarification</a>
+            </li>
+
         </ul>
         <div class="tab-content">
             <div class="tab-pane active" id="panel-overview">
@@ -120,34 +151,60 @@
             <div class="tab-pane" id="panel-rank">
                 {% include "contest/contest_rank.html" %}
             </div>
+            <div class="tab-clar" id="panel-clar">
+                {% include "contest/contest_clar.html" %}
+            </div>
         </div>
     </div>
     <script type="text/javascript">
+        var start;
+        var duration;
         $(document).ready(function () {
-            $('#get_status').click(function () {
-                //alert("Hello!");
-                contest_id = {{contest.id}};
-                $.ajax({
-                    type: 'post',
-                    url: "/contest/" + contest_id + "/status/",
-                    success: function (responseData) {
-                        $('#panel-status').html(responseData);
-			//MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-                    }
-                })
+	    $.ajax({
+	     	type: "post",
+	     	url: "/contest/" + {{ contest.id }} + "/time/",
+	     	dataType: "json",
+	     	success: function(data){
+			start=new Date(data.start);
+			duration=data.duration;
+//   			setInterval(function(){refreshtime(start);},1000);
+	        }
+	    });
+        $('#get_status').click(function () {
+//                alert("Hello!");
+            contest_id = {{contest.id}};
+            $.ajax({
+                type: 'post',
+                url: "/contest/" + contest_id + "/status/",
+                success: function (responseData) {
+                    $('#panel-status').html(responseData);
+		//MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                }
             })
-            $('#submit_button').click(function(){
-                $('#submit_form').ajaxForm(
-                $.ajax({
-                    type: 'post',
-                    url: "/contest/" + {{ contest.id }} + "/status/",
-                    success: function (responseData) {
-                        $('#panel-status').html(responseData);
-                        $('#overview').tab('show');
-                    }
-                })
-            )
-            })
+        })
+	    $('#get_rank').click(function(){
+	            refreshRankList();
+		})
+	    $('#submit_button').click(function(){
+    		var current=getServerTime();
+    		var elapsed;
+    		elapsed=(current-start.getTime())/1000;
+    		if(elapsed>duration){
+    		    alert("Contest is Over!");
+    		    return false;
+    		}else{
+    		    $('#submit_form').ajaxForm(
+        			$.ajax({
+        			    type: 'post',
+        			    url: "/contest/" + {{ contest.id }} + "/status/",
+        			    success: function (responseData) {
+        				    $('#panel-status').html(responseData);
+        			    	$('#overview').tab('show');
+        			    }
+        			})
+    		    )
+    		}
+        })
             $('#overview').tab('show');
         })
     </script>

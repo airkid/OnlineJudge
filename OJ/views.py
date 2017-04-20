@@ -7,11 +7,13 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.db.models import Q
 from django.core.files.base import ContentFile
-import datetime
 from OJ.models import *
-import pytz
 from django.utils import timezone
-import OJ.judge as judge
+from collections import OrderedDict
+import datetime
+import pytz
+import re
+import json
 import OJ.judger as judger
 
 LIST_NUMBER_EVERY_PAGE = 20
@@ -20,7 +22,13 @@ PAGE_NUMBER_EVERY_PAGE = 7
 
 def ren2res(template, req, dict={}):
     if req.user.is_authenticated():
-        dict.update({'user': {'id': req.user.id, 'name': req.user.get_username()}})
+        p = re.compile('^[0-9a-zA-Z_]+$')
+        dict.update({'user': {  'id': req.user.id, 
+                                'name': req.user.get_username(),
+                                'is_staff':req.user.is_staff,
+                                'sid':req.user.info.sid,
+                                'nickname':req.user.info.nickname,
+                                'school':req.user.info.school}})
     else:
         dict.update({'user': False})
     if req:
@@ -66,9 +74,15 @@ def register(req):
             return HttpResponseRedirect('/')
     elif req.method == 'POST':
         name = req.POST.get('name')
+        nickname = req.POST.get('nickname')
         result = User.objects.filter(username=name);
-        if len(result) != 0:
-            return ren2res('register.html', req, {'err': "This email has been registered ! Try another"})
+        p = re.compile('^[0-9a-zA-Z_]+$')
+        if len(name) == 0 or p.match(name)==None:
+            return ren2res('register.html', req, {'err': "Invalid account name"})
+        elif len(nickname) == 0:
+            return ren2res('register.html', req, {'err': "Nickname can't be null"})
+        elif len(result) != 0:
+            return ren2res('register.html', req, {'err': "This account has been registered! Try another"})
         else:
             pw1 = req.POST.get('pw1')
             if pw1 == "":
@@ -82,6 +96,7 @@ def register(req):
                 newuser.set_password(pw1)
                 newuser.save()
                 newinfo = UserInfo(id=newuser)
+                newinfo.sid = req.POST.get('sid')
                 newinfo.save()
                 newuser = auth.authenticate(username=name, password=pw1)
                 auth.login(req, user=newuser)
@@ -106,6 +121,9 @@ def problem(req):
     else:
         qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).all()
 
+    idxstart = (pg - 1) * LIST_NUMBER_EVERY_PAGE
+    idxend = pg * LIST_NUMBER_EVERY_PAGE
+
     max = qs.count() // 20 + 1
 
     if (pg > max):
@@ -117,9 +135,22 @@ def problem(req):
     if end > max:
         end = max
 
-    lst = qs[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+    lst = qs[idxstart:idxend]
+    lst = list(lst)
+    aclst = []
+    trylst = []
+    if req.user.is_authenticated():
+        user = req.user
+        for item in lst:
+            if item.aceduser.filter(id=user.info.id):
+                aclst.append(item.id)
+            elif item.trieduser.filter(id=user.info.id):
+                trylst.append(item.id)
+#        print(aclst)
+#        print('trylst')
+#        print(trylst)
 
-    return ren2res("problem.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})
+    return ren2res("problem.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst, 'aclst':aclst, 'trylst':trylst})
 
 
 def problem_detail(req, pid):
@@ -163,9 +194,9 @@ def status(req):
     problem = None
     if pid:
         problem = Problem.objects.get(id=pid)
-        query = Submit.objects.filter(pid=problem, cid=-1).all().order_by('-time')
+        query = Submit.objects.filter(pid=problem, cid=-1).all().order_by('-id')
     else:
-        query = Submit.objects.filter(cid=-1).order_by('-time')
+        query = Submit.objects.filter(cid=-1).order_by('-id')
 
     search = req.GET.get('search')
     if search:
@@ -218,6 +249,11 @@ def contest_detail(req, cid):
         start = True
     else:
         start = False
+    if contest.private:
+        # print('contest.accounts')
+        # print(contest.accounts.all())
+        if req.user.info not in contest.accounts.all():
+            return ren2res("contest/contest.html", req, {'contest': contest, 'err': "You do not have access to this contest."})
     if start:
         problems = contest.get_problem_list()
         length = len(problems)
@@ -227,7 +263,7 @@ def contest_detail(req, cid):
             problems[i].append(len(Submit.objects.filter(uid = req.user).filter(pid = problems[i][2]).filter(status = 0)))
         return ren2res("contest/contest.html", req, {'contest': contest, 'problems': problems, 'problem': problems[0][2]})
     else:
-        return ren2res("contest/contest.html", req, {'contest': contest, 'err': time})
+        return ren2res("contest/contest.html", req, {'contest': contest, 'err': "Just wait."})
 
 
 @login_required
@@ -243,9 +279,12 @@ def contest_get_problem(req, cid):
 @login_required
 def contest_status(req, cid):
     if req.is_ajax():
+        contest = Contest.objects.get(id=cid)
         t = loader.get_template('contest/contest_status.html')
         status_list = Submit.objects.filter(cid=cid).order_by('-time')
-
+        if contest.private:
+            if req.user.info not in contest.accounts.all():
+                status_list = []
         pg = req.GET.get('pg')
         if not pg:
             pg = 1
@@ -271,9 +310,13 @@ def contest_submit(req, cid):
         finish = True
     else:
         finish = False
+
+    if contest.private:
+        if req.user.info not in contest.accounts.all():
+            return HttpResponseRedirect("/contest/" + cid + "/")
+
     if req.method == 'GET':
         return ren2res("contest/contest_submit.html", req, {'contest': contest, 'problems': contest.get_problem_list()})
-
     elif req.method == 'POST':
         pid = req.POST.get('pid')
         sub = Submit(pid=Problem.objects.get(id=pid), uid=req.user, lang=req.POST.get('lang'))
@@ -307,41 +350,57 @@ def dateToInt(date, field):
 def contest_rank(req, cid):
     if req.is_ajax():
         contest = Contest.objects.get(id = cid)
-        status_list = Submit.objects.filter(cid = cid).order_by("time")
-
-        rank_list = {}
+        if contest.private:
+            if req.user.info not in contest.accounts.all():
+                return JsonResponse("{}")
+        rank_cache = contest.rank
+        # print("rank_cache:")
+        # print(rank_cache)
+        status_list = Submit.objects.filter(cid = cid).filter(id__gt = contest.last_submit_id).order_by("time")
+        # print("status_list")
+        # print(status_list)
+        rank_dict = json.loads(rank_cache)
+        # print("rank_dict")
+        # print(rank_dict)
         statsinfo = {}
         pos = 0
         problem_list = contest.get_problem_list()
         length = len(problem_list)
 
-        rank_list["statsinfo"] = [{} for i in range(length)]
+        rank_dict["statsinfo"] = [{} for i in range(length)]
 
         for item in problem_list:
-            rank_list["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
+            rank_dict["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
             statsinfo[item[2].title] = {"pos" : pos}
-            pos = pos + 1
+            pos += 1
 
         for item in status_list:
-            if item.uid.username not in rank_list.keys():
-                rank_list[item.uid.username] = {"name" : item.uid.username, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
+            name = item.uid.username
+            contest.last_submit_id = max(contest.last_submit_id, item.id)
+            if item.uid.is_staff :
+                continue
+            if name not in rank_dict.keys():
+                rank_dict[name] = {"name" : name, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
 
             pos = statsinfo[item.pid.title]["pos"]
 
             if item.status == 0:
-                rank_list["statsinfo"][pos]["acNum"] += 1
-            rank_list["statsinfo"][pos]["tryNum"] += 1
+                rank_dict["statsinfo"][pos]["acNum"] += 1
+            rank_dict["statsinfo"][pos]["tryNum"] += 1
 
-            if rank_list[item.uid.username]["probs"][pos]["acNum"] == 0:
+            if rank_dict[name]["probs"][pos]["acNum"] == 0:
                 if item.status == 0:
-                    rank_list[item.uid.username]["probs"][pos]["acNum"] += 1
-                    rank_list[item.uid.username]["probs"][pos]["acTime"] = dateToInt(item.time - contest.start_time, 1)
-                    rank_list[item.uid.username]["penalty"] += 20 * rank_list[item.uid.username]["probs"][pos]["failNum"] + dateToInt(item.time - contest.start_time, 0)
-                    rank_list[item.uid.username]["solved"] += 1
+                    rank_dict[name]["probs"][pos]["acNum"] += 1
+                    rank_dict[name]["probs"][pos]["acTime"] = dateToInt(item.time - contest.start_time, 1)
+                    rank_dict[name]["penalty"] += 20 * rank_dict[name]["probs"][pos]["failNum"] + dateToInt(item.time - contest.start_time, 0)
+                    rank_dict[name]["solved"] += 1
                 else:
-                    rank_list[item.uid.username]["probs"][pos]["failNum"] += 1
-        print(rank_list)
-        return JsonResponse(rank_list)
+                    rank_dict[name]["probs"][pos]["failNum"] += 1
+        contest.rank = json.dumps(rank_dict)
+        # print("contest.rank")
+        # print(contest.rank)
+        contest.save()
+        return JsonResponse(rank_dict)
 
 def page_not_found(req):
     return ren2res("404.html", req, {})
@@ -368,12 +427,16 @@ def rank(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-        qs = UserInfo.objects.filter(Q(id__icontains=search))
+        qs = UserInfo.objects.filter(Q(nickname__icontains=search)|Q(id__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
         qs = UserInfo.objects.all().order_by('-problem_ac','problem_try')
 
-    max = qs.count() // 20 + 1
+#    for item in qs:
+#        item.problem_ac=item.cnt_ac()
+#        item.save()
+
+    max = qs.count() // LIST_NUMBER_EVERY_PAGE + 1
 
     if (pg > max):
         raise Http404("no such page")
@@ -385,8 +448,9 @@ def rank(req):
         end = max
 
     lst = qs[(pg - 1) * LIST_NUMBER_EVERY_PAGE:pg * LIST_NUMBER_EVERY_PAGE]
+    idx = (pg - 1) * LIST_NUMBER_EVERY_PAGE
 
-    return ren2res("rank.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst})
+    return ren2res("rank.html", req, {'pg': pg, 'page': list(range(start, end + 1)), 'list': lst, 'idx': idx})
 
 
 def about(req):
@@ -402,7 +466,7 @@ def show_source(req):
     query = Submit.objects.filter(id=solution_id)
     if len(query) == 0:
         raise Http404
-    elif query[0].uid.id != req.user.id:
+    elif query[0].uid.id != req.user.id and not req.user.is_staff:
         raise Http404
     else:
         submit = query[0]
@@ -422,3 +486,66 @@ def show_source(req):
             err = 'Successful'
         return ren2res('show_source.html', req, {'submit': submit, 'code': file, 'errinfo': err, 'lang': LANG_DICT[submit.lang]})
 
+@login_required
+def change_sid(req):
+    user = req.user
+    sid = req.POST.get('sid')
+    if sid is None:
+        return ren2res('temp_changesid.html',req,{})
+    else:
+        user.info.sid = sid
+        user.info.save()
+        return HttpResponseRedirect('/')
+
+
+@login_required
+def change_name(req):
+    user = req.user
+    name = req.POST.get('name')
+    if name is None:
+        return ren2res('temp_changename.html',req,{})
+    else:
+        result = User.objects.filter(username=name);
+        p = re.compile('^[0-9a-zA-Z_]+$')
+        if len(name) == 0 or p.match(name)==None:
+            return HttpResponseRedirect('/')
+        elif len(result) != 0:
+            return HttpResponseRedirect('/')
+        if p.match(user.get_username())!=None:
+            return HttpResponseRedirect('/')
+            
+        user.username = name
+        user.save()
+        return HttpResponseRedirect('/')
+
+
+
+@login_required
+def profile(req):
+    if req.method == 'GET':
+        return ren2res('profile.html',req,{})
+    else:
+        user = req.user
+        if not user:
+            return ren2res('profile.html',req,{})
+        else:
+            pw = req.POST.get('pw')
+            if not user.check_password(pw):
+                return ren2res('profile.html', req, {'err': "Wrong password"})
+            user.info.nickname = req.POST.get('nickname')
+            if len(user.info.nickname)==0:
+                return ren2res('profile.html', req, {'err': "Nickname can't be null"})
+            user.info.school = req.POST.get('school')
+            user.info.sid = req.POST.get('sid')
+            user.info.save()
+            npw1 = req.POST.get('npw1')
+            if npw1 == "":
+                return ren2res('profile.html', req, {'err': "User Profile Updated"})
+            npw2 = req.POST.get('npw2')
+            if npw1 != npw2:
+                return ren2res('profile.html', req, {'err': "New Password not consistent"})
+            else:
+                user.set_password(npw1)
+                user.save()
+                return ren2res("login.html", req, {})
+        return HttpResponseRedirect('/')

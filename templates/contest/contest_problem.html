@@ -12,6 +12,15 @@ MathJax.Hub.Config({
     "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
 });
 </script>
+
+<style type="text/css">
+pre{
+	word-break: keep-all;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+} 
+</style>
+
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 <div class="text-center">
@@ -26,13 +35,14 @@ MathJax.Hub.Config({
 <h3 class="text-info" >Description</h3>
 {% autoescape off %}
 <pre>{{ problem.content }}</pre>
-{% endautoescape %}
 
 <h3 class="text-info" >Input</h3>
 <pre>{{ problem.input }}</pre>
 
 <h3 class="text-info" >Output</h3>
 <pre>{{ problem.output }}</pre>
+
+{% endautoescape %}
 
 {% if problem.samples %}
     {% for s in problem.samples %}
@@ -44,8 +54,10 @@ MathJax.Hub.Config({
     {% endfor %}
 {% endif %}
 
+{% autoescape off %}
 <h3 class="text-info" >Note</h3>
 <pre>{{ problem.note }}</pre>
 
 <h3 class="text-info" >Source</h3>
 <pre>{{ problem.source }}</pre>
+{% endautoescape %}

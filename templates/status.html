@@ -26,26 +26,30 @@
                     class="danger"
                 {% endifequal %}
          >
-            <td><center>{{ item.id }}</center></td>
+	    <td><center>{{ item.id }}</a></center></td>
             <td><center><a href="/problem/{{ item.pid.id }}">{{ item.pid.title }}</a></center></td>
             {% ifequal item.pid.isCCF True %}
                  <td><center>{{ item.score }}</center></td>
-                {% else %}
+	    {% else %}
 		{% ifequal item.get_status_display "Compilation Error" %}
 		    {% ifequal item.uid.id user.id %}
 			    <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_status_display }}</a></center></td>
-			    {% else %}
-				    <td><center>{{ item.get_status_display }}</center></td>
-		    {% endifequal %}
-                    {% else %}
+		    {% else %}
 			    <td><center>{{ item.get_status_display }}</center></td>
+		    {% endifequal %}
+                {% else %}
+		    <td><center>{{ item.get_status_display }}</center></td>
                 {% endifequal %}
             {% endifequal %}
-            {% ifequal item.uid.id user.id %}
-                <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
-            {% else %}
-                <td><center>{{ item.get_lang_display }}</center></td>
-            {% endifequal %}
+	    {% ifequal item.uid.id user.id %}
+		    <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
+	    {% else %}
+		    {% ifequal user.is_staff True%}
+			    <td><center><a href="/show_source?solution_id={{ item.id }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
+		    {% else %}
+			    <td><center>{{ item.get_lang_display }}</center></td>
+		    {% endifequal %}
+	    {% endifequal %}
             <td><center>{{ item.run_time }}ms</center></td>
             <td><center>{{ item.run_memory }}KB</center></td>
             <td><center>{{ item.uid.username }}</center></td>
@@ -56,7 +60,7 @@
 {% block page %}
     <ul class="pagination">
         {% for id in page %}
-        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/status?pg={{ id }}">{{ id }}</a></li>
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="">{{ id }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}

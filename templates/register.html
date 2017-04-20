@@ -5,6 +5,7 @@
 {% block navbar %}{% include "include/navbar.html" %}{% endblock %}
 
 {% block header %}
+<script src="http://static.geetest.com/static/tools/gt.js"></script>
 <h1>Register</h1>
 {% endblock %}
 
@@ -31,6 +32,14 @@
     <div class="row">
         <div class=" col-md-6 col-md-offset-3">
             <div class="form-group">
+                <label>StudentID:</label>
+                <input type="text" class="form-control" name="sid" value={{ sid }}>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
                 <label>Password:</label>
                 <input type="password" class="form-control" name="pw1">
             </div>
@@ -44,6 +53,20 @@
             </div>
         </div>
     </div>
+    <div id="captcha-box"></div>
+    <script>
+        var captchaBox = document.getElementById('#captcha-box');
+        initGeetest({
+            gt: data.gt,
+            challenge: data.challenge,
+            offline: !data.success,
+            new_captcha: data.new_captcha
+        }, function (captchaObj) {
+            captchaObj.appendTo(captchaBox);
+            // 省略其他方法的调用
+        });
+    </script>
+
     <center><button type="submit" class="btn btn-primary">Register</button></center>
 </form>
 

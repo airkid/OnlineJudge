@@ -80,7 +80,7 @@ def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit, lang)
         runcfg['files'] = {}
     else:
         runcfg['memorylimit']=0x3f3f3f3f3f3f3f3f
-
+    print(runcfg)
     rst = lorun.run(runcfg)
     print('result')
     print(rst)

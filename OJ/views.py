@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from OJ.models import *
+from OJ.tasks import judge_delay
 from django.utils import timezone
 from collections import OrderedDict
 import datetime
@@ -184,8 +185,8 @@ def problem_submit(req, pid):
         # f.close()
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
-        judger.Judger(sub);
-
+        #judger.Judger(sub);
+        result=judge_delay.delay(sub)
         return HttpResponseRedirect("/status/")
 
 
@@ -269,9 +270,13 @@ def contest_detail(req, cid):
 @login_required
 def contest_get_problem(req, cid):
     if req.is_ajax():
+        contest = Contest.objects.get(id=cid)
         pid = req.GET.get('pid')
         t = loader.get_template('contest/contest_problem.html')
         problem = Problem.objects.get(id=pid)
+        if contest.private:
+            if req.user.info not in contest.accounts.all():
+                problem = []
         content_html = t.render(Context({'problem': problem, 'user' : req.user}))
         return HttpResponse(content_html)
 
@@ -334,7 +339,8 @@ def contest_submit(req, cid):
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
-        judger.Judger(sub)
+        #judger.Judger(sub)
+        result=judge_delay.delay(sub)
     if not finish:
         return HttpResponseRedirect("/contest/" + cid + "/")
     else:
@@ -367,24 +373,32 @@ def contest_rank(req, cid):
         problem_list = contest.get_problem_list()
         length = len(problem_list)
 
-        rank_dict["statsinfo"] = [{} for i in range(length)]
-
-        for item in problem_list:
-            rank_dict["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
-            statsinfo[item[2].title] = {"pos" : pos}
-            pos += 1
+        
+        if contest.last_submit_id==0:
+            rank_dict["statsinfo"] = [{} for i in range(length)]
+            for item in problem_list:
+                rank_dict["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
+                statsinfo[item[2].title] = {"pos" : pos}
+                pos += 1
+        else:
+            for item in problem_list:
+                statsinfo[item[2].title] = {"pos" : pos}
+                pos += 1
 
         for item in status_list:
-            name = item.uid.username
-            contest.last_submit_id = max(contest.last_submit_id, item.id)
             if item.uid.is_staff :
                 continue
+            name = item.uid.username
+            contest.last_submit_id = max(contest.last_submit_id, item.id)
             if name not in rank_dict.keys():
                 rank_dict[name] = {"name" : name, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
 
             pos = statsinfo[item.pid.title]["pos"]
 
-            if item.status == 0:
+            if item.status == 3: #Waiting
+                break
+
+            if item.status == 0: #Accepted
                 rank_dict["statsinfo"][pos]["acNum"] += 1
             rank_dict["statsinfo"][pos]["tryNum"] += 1
 
@@ -432,10 +446,6 @@ def rank(req):
     else:
         qs = UserInfo.objects.all().order_by('-problem_ac','problem_try')
 
-#    for item in qs:
-#        item.problem_ac=item.cnt_ac()
-#        item.save()
-
     max = qs.count() // LIST_NUMBER_EVERY_PAGE + 1
 
     if (pg > max):
@@ -476,15 +486,28 @@ def show_source(req):
             f = open('/home/sduacm/OnlineJudge/JudgeFiles/result/' + str(submit.id), 'r')
             err = f.read()
             f.close()
-        except IOError:
+        except IOError as e:
+            print(e)
             pass
+        
         err = err.replace("/tmp","...")
         err = err.replace("/sduoj/source","")
-        print('error:')
-        print(err)
+
         if err == '':
             err = 'Successful'
-        return ren2res('show_source.html', req, {'submit': submit, 'code': file, 'errinfo': err, 'lang': LANG_DICT[submit.lang]})
+        htmldict={'submit': submit, 'code': file, 'errinfo': err, 'lang': LANG_DICT[submit.lang]}
+        if submit.pid.isSPJ:
+            chkerr = ""
+            try:
+                f = open('/home/sduacm/OnlineJudge/JudgeFiles/checkresult/' + str(submit.id), 'r')
+                chkerr = f.read()
+                f.close()
+            except IOError as e:
+                print(e)
+            chkerr = chkerr.replace("/tmp","...")
+            chkerr = chkerr.replace("/sduoj/source","")
+            htmldict['spjinfo'] = chkerr
+        return ren2res('show_source.html', req, htmldict)
 
 @login_required
 def change_sid(req):

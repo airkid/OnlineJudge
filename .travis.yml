@@ -6,7 +6,7 @@ services:
   - mysql
 
 before_install:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS oj;'
+  - mysql -e 'CREATE DATABASE oj;'
   - mysql -e 'CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';'
 
 # command to install dependencies

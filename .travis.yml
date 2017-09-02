@@ -7,10 +7,11 @@ services:
   - git
 
 before_install:
-  - mysql -e "CREATE DATABASE oj;"
-  - mysql oj -e "CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';"
   - git clone https://github.com/lodevil/Lo-runner.git
   - cd Lo-runner && sudo ./setup.py build && sudo ./setup.py install
+  - cd ..
+  - mysql -e "CREATE DATABASE oj;"
+  - mysql oj -e "CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';"
 
 # command to install dependencies
 install: "pip install -r requirements.txt"

@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from OJ.models import *
+from vj.models import UserInfo as vjInfo
 from OJ.tasks import judge_delay
 from django.utils import timezone
 from collections import OrderedDict
@@ -97,8 +98,14 @@ def register(req):
                 newuser.set_password(pw1)
                 newuser.save()
                 newinfo = UserInfo(id=newuser)
+                newinfo.nickname = nickname 
                 newinfo.sid = req.POST.get('sid')
                 newinfo.save()
+                vjinfo = vjInfo(id=newuser)
+                vjinfo.sid = req.POST.get('sid')
+                vjinfo.nickname = nickname 
+                vjinfo.save()
+
                 newuser = auth.authenticate(username=name, password=pw1)
                 auth.login(req, user=newuser)
                 next = req.session.get('next')
@@ -117,7 +124,7 @@ def problem(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-        qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).filter(Q(id__icontains=search) | Q(title__icontains=search))
+        qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).filter(Q(id__icontains=search) | Q(title__icontains=search) | Q(source__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
         qs = Problem.objects.filter(visible=True).filter(numberOfContest=0).all()
@@ -125,7 +132,7 @@ def problem(req):
     idxstart = (pg - 1) * LIST_NUMBER_EVERY_PAGE
     idxend = pg * LIST_NUMBER_EVERY_PAGE
 
-    max = qs.count() // 20 + 1
+    max = qs.count() // LIST_NUMBER_EVERY_PAGE + 1
 
     if (pg > max):
         raise Http404("no such page")
@@ -210,7 +217,7 @@ def status(req):
         pg = 1
     pg = int(pg)
 
-    max_cnt = query.count() // 20 + 1
+    max_cnt = query.count() // LIST_NUMBER_EVERY_PAGE + 1
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
     end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
 
@@ -223,15 +230,15 @@ def status(req):
 def contest(req):
     search = req.GET.get('search')
     if search:
-        query = Contest.objects.filter(Q(name__icontains=search) | Q(uid__username__icontains=search))
+        query = Contest.objects.filter(Q(name__icontains=search) | Q(uid__username__icontains=search)).order_by('-start_time')
     else:
-        query = Contest.objects.all()
+        query = Contest.objects.all().order_by('-start_time')
     pg = req.GET.get('pg')
     if not pg:
         pg = 1
     pg = int(pg)
 
-    max_cnt = query.count()
+    max_cnt = query.count() // LIST_NUMBER_EVERY_PAGE + 1
     start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
     end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
 
@@ -295,7 +302,7 @@ def contest_status(req, cid):
             pg = 1
         pg = int(pg)
 
-        max_cnt = status_list.count() // 20 + 1
+        max_cnt = status_list.count() // LIST_NUMBER_EVERY_PAGE + 1
         start = max(pg - PAGE_NUMBER_EVERY_PAGE, 1)
         end = min(pg + PAGE_NUMBER_EVERY_PAGE, max_cnt)
 
@@ -329,22 +336,24 @@ def contest_submit(req, cid):
             sub.cid = contest.id
         else:
             sub.cid = -1
-        sub.save()
-        if req.POST.get('code'):
-            content_file = ContentFile(req.POST.get('code'))
+        
+        code=req.POST.get('code');
+        if code:
+            if len(code)>=10:
+                content_file = ContentFile(req.POST.get('code'))
+            else:
+                return HttpResponseRedirect("/contest/" + cid + "/")
         elif req.FILES:
             content_file = ContentFile(req.FILES['file'].read())
         else:
             return ren2res("contest/contest_submit.html", req,
                            {'contest': contest, 'problems': contest.get_problem_list(), 'err': 'No Submit!'})
+        sub.save()
         sub.source_code.save(name=str(sub.id), content=content_file)
         sub.save()
         #judger.Judger(sub)
         result=judge_delay.delay(sub)
-    if not finish:
-        return HttpResponseRedirect("/contest/" + cid + "/")
-    else:
-        return HttpResponseRedirect("/contest/"+cid+"/status?pid=" + pid)
+    return HttpResponseRedirect("/contest/" + cid + "/")
 
 def dateToInt(date, field):
      if field == 0:
@@ -355,66 +364,69 @@ def dateToInt(date, field):
 @login_required
 def contest_rank(req, cid):
     if req.is_ajax():
-        contest = Contest.objects.get(id = cid)
-        if contest.private:
-            if req.user.info not in contest.accounts.all():
-                return JsonResponse("{}")
-        rank_cache = contest.rank
-        # print("rank_cache:")
-        # print(rank_cache)
-        status_list = Submit.objects.filter(cid = cid).filter(id__gt = contest.last_submit_id).order_by("time")
-        # print("status_list")
-        # print(status_list)
-        rank_dict = json.loads(rank_cache)
-        # print("rank_dict")
-        # print(rank_dict)
-        statsinfo = {}
-        pos = 0
-        problem_list = contest.get_problem_list()
-        length = len(problem_list)
+        try:
+            contest = Contest.objects.get(id = cid)
+            if contest.private:
+                if req.user.info not in contest.accounts.all():
+                    return JsonResponse("{}")
+            rank_cache = contest.rank
+            status_list = Submit.objects.filter(cid = cid).filter(id__gt = contest.last_submit_id).order_by("time")
+            rank_dict = json.loads(rank_cache)
+            statsinfo = {}
+            pos = 0
+            problem_list = contest.get_problem_list()
+            length = len(problem_list)
 
-        
-        if contest.last_submit_id==0:
-            rank_dict["statsinfo"] = [{} for i in range(length)]
-            for item in problem_list:
-                rank_dict["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0}
-                statsinfo[item[2].title] = {"pos" : pos}
-                pos += 1
-        else:
-            for item in problem_list:
-                statsinfo[item[2].title] = {"pos" : pos}
-                pos += 1
+            
+            if contest.last_submit_id==0:
+                rank_dict = {}
+                rank_dict["statsinfo"] = [{} for i in range(length)]
+                for item in problem_list:
+                    rank_dict["statsinfo"][pos] = {"probid" : chr(pos + 65) ,"acNum" : 0, "tryNum" : 0, "fbTime" : -1}
+                    statsinfo[item[2].title] = {"pos" : pos}
+                    pos += 1
+            else:
+                for item in problem_list:
+                    statsinfo[item[2].title] = {"pos" : pos}
+                    pos += 1
 
-        for item in status_list:
-            if item.uid.is_staff :
-                continue
-            name = item.uid.username
-            contest.last_submit_id = max(contest.last_submit_id, item.id)
-            if name not in rank_dict.keys():
-                rank_dict[name] = {"name" : name, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
+            for item in status_list:
+                if item.uid.is_staff :
+                    continue
+                name = item.uid.username
+                contest.last_submit_id = max(contest.last_submit_id, item.id)
+                if name not in rank_dict.keys():
+                    rank_dict[name] = {"name" : name, "solved":0, "penalty":0, "probs" : [{"failNum" : 0, "acNum" : 0, "acTime" : 0} for i in range(length)]}
+                pos = statsinfo[item.pid.title]["pos"]
+                if item.status == 3: #Waiting
+                    break
 
-            pos = statsinfo[item.pid.title]["pos"]
+                if item.status == 0: #Accepted
+                    rank_dict["statsinfo"][pos]["acNum"] += 1
+                rank_dict["statsinfo"][pos]["tryNum"] += 1
 
-            if item.status == 3: #Waiting
-                break
-
-            if item.status == 0: #Accepted
-                rank_dict["statsinfo"][pos]["acNum"] += 1
-            rank_dict["statsinfo"][pos]["tryNum"] += 1
-
-            if rank_dict[name]["probs"][pos]["acNum"] == 0:
-                if item.status == 0:
-                    rank_dict[name]["probs"][pos]["acNum"] += 1
-                    rank_dict[name]["probs"][pos]["acTime"] = dateToInt(item.time - contest.start_time, 1)
-                    rank_dict[name]["penalty"] += 20 * rank_dict[name]["probs"][pos]["failNum"] + dateToInt(item.time - contest.start_time, 0)
-                    rank_dict[name]["solved"] += 1
-                else:
-                    rank_dict[name]["probs"][pos]["failNum"] += 1
-        contest.rank = json.dumps(rank_dict)
-        # print("contest.rank")
-        # print(contest.rank)
-        contest.save()
-        return JsonResponse(rank_dict)
+                if rank_dict[name]["probs"][pos]["acNum"] == 0:
+                    if item.status == 0:
+                        rank_dict[name]["probs"][pos]["acNum"] += 1
+                        acTime = dateToInt(item.time - contest.start_time, 1)
+                        rank_dict[name]["probs"][pos]["acTime"] = dateToInt(item.time - contest.start_time, 1)
+                        if rank_dict["statsinfo"][pos]["fbTime"] == -1 or rank_dict["statsinfo"][pos]["fbTime"] >= acTime:
+                            rank_dict["statsinfo"][pos]["fbTime"] = acTime
+                            rank_dict[name]["probs"][pos]["fb"] = 1
+                        else:
+                            rank_dict[name]["probs"][pos]["fb"] = 0
+                        rank_dict[name]["penalty"] += 20 * rank_dict[name]["probs"][pos]["failNum"] + dateToInt(item.time - contest.start_time, 0)
+                        rank_dict[name]["solved"] += 1
+                    else:
+                        rank_dict[name]["probs"][pos]["failNum"] += 1
+                        rank_dict[name]["probs"][pos]["fb"] = 0
+            #print(rank_dict)
+            contest.rank = json.dumps(rank_dict)
+            contest.save()
+            return JsonResponse(rank_dict)
+        except Exception as e:
+            print(e)
+            raise e
 
 def page_not_found(req):
     return ren2res("404.html", req, {})
@@ -441,7 +453,7 @@ def rank(req):
     pg = int(req.GET.get('pg', 1))
     search = req.GET.get('search', "")
     if search:
-        qs = UserInfo.objects.filter(Q(nickname__icontains=search)|Q(id__icontains=search))
+        qs = UserInfo.objects.filter(Q(nickname__icontains=search)|Q(id__username__icontains=search)|Q(id__id__icontains=search))
         # .select_related("uid__name").filter(uid__contains=search)
     else:
         qs = UserInfo.objects.all().order_by('-problem_ac','problem_try')

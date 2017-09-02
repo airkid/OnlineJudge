@@ -65,9 +65,18 @@
                                 }
                             } else {
                                 if (pitem.failNum == 0) {
-                                    trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "</td>";
+                                    if(pitem.fb == 1){
+                                        trHTML += "<td style=\"background-color: #008800;\">" + "<b style=\"color: #FFFFFF;\">" + secondsToTime(pitem.acTime) + "</b>" +"</td>";
+                                    }else{
+                                        trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "</td>";
+                                    }
                                 } else {
-                                    trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "<br><span>(-" + pitem.failNum + ")</span></td>";
+                                    if(pitem.fb == 1){
+                                        trHTML += "<td style=\"background-color: #008800;\">" + "<b style=\"color: #FFFFFF;\">" + secondsToTime(pitem.acTime) + "</b>" + "<br><span>" + "<b style=\"color: #FFFFFF;\">(-" + pitem.failNum + ")</b>" + "</span></td>";
+                                    } else{
+                                        trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "<br><span>(-" + pitem.failNum + ")</span></td>";
+                                    }
+                                    
                                 }
                             }
                         });

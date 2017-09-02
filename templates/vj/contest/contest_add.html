@@ -1,0 +1,250 @@
+{% extends "vj/base.html" %}
+
+{% block title %}{{ contest.name }}{% endblock %}
+
+{% block navbar %}{% include "vj/include/navbar-contest.html" %}{% endblock %}
+
+{% block header %}
+    <h1 class="text-center text-info">Add Contest</h1>
+{% endblock %}
+{% block content %}
+    <hr>
+    <script type="text/javascript">
+        $(document).ready(function ()
+        {
+            $("#show_pass").change(function ()
+            {
+                if(!document.getElementById("contest_pass")){
+                    $("#contest_open").after("<div class = \"row\" id=\"contest_pass\">"+
+                        "<label class=\"col-sm-2 control-label\">Password:</label>"+
+                        "<div class=\"col-sm-5\">"+
+                        "<input type=\"password\" class=\"form-control\" name=\"password\">"+
+                        "</div>"+
+                        "</div>")
+                }
+            });
+            $("#hide_pass").change(function ()
+            {
+                if(document.getElementById("contest_pass")){
+                    $("div").remove("#contest_pass")
+                }
+            })
+            $("#show_score").change(function()
+            {
+                $(".score_input").show();
+            })
+            $("#hide_score").change(function()
+            {
+                $(".score_input").hide();
+            })
+            
+        });
+        function removeTR(tdobject){
+            var td=$(tdobject);  
+            td.parents("tr").remove();
+        }
+        function addTR(){
+            $("#probTable").append("<tr><td><select name=\"originoj\" class=\"form-control\" value=\"\" style=\"width:100px;\" ><option value=\"HDU\">HDU</option><option value=\"FZU\">FZU</option><option value=\"ZOJ\">ZOJ</option></select></td><td><input type=\"text\" class=\"form-control\" name=\"prob\" oninput=\"getTitle(event,this)\" onpropertychange=\"getTitle(event,this)\"></td><td><input type=\"text\" class=\"form-control\" value=\"No Such Problem\" name=\"title\" disabled=\"disabled\" style=\"width:200px;\"></td><td hidden=\"hidden\" class=\"score_input\"><input type=\"text\" class=\"form-control\"  name=\"score\" value = \"1\" style=\"width:80px;\"></td><td onclick=\"removeTR(this)\"><center><button type=\"button\" class=\"btn btn-danger\">Remove</button></center></td></tr>")
+            if($("input[name='type']:checked").val() == "custom"){
+                $(".score_input").show();
+            }else{
+                $(".score_input").hide();
+            }
+        }
+        function getTitle(event,inputobject){
+            var trobject = $(inputobject).parents("tr")
+            var originoj = $(trobject).children("td").eq(0).children("select").eq(0).val()
+            var probid = $(inputobject).val()
+            var title_obj = $(trobject).children("td").eq(2).children("input").eq(0)
+            $.ajax({
+                type: 'get',
+                url: "/vj/contest/addcontest/get_problem_title/?originoj=" + originoj+"&probid="+probid,
+                success: function (responseData) {
+                    var probid_now = $(inputobject).val()
+                    if(probid == probid_now){
+                        $(title_obj).val(responseData)
+                    }
+                }
+            })
+        }
+        function addcontest_submit(){
+            //author type openness title begin duration
+            
+            
+            var problems = "$"
+            var ok = 0
+
+            $("#probTable tr").each(function(){
+                var originoj = $(this).children("td").eq(0).children("select").eq(0).val()
+                var probid   = $(this).children("td").eq(1).children("input").eq(0).val()
+                var title    = $(this).children("td").eq(2).children("input").eq(0).val()
+                var score    = $(this).children("td").eq(3).children("input").eq(0).val()
+                if(title == "No Such Problem" || isNaN(score)){
+                    //alert(title+"/"+score)
+                    ok = ok + 1
+                }else{
+                    problems = problems + originoj + "|" + probid + "|" + score + "$"
+                }
+            })
+            //alert(problems)
+            if(ok < 2){
+                
+                var pass = ""
+                var obj = $('input[name="password"]')
+                if(obj.length != 0){
+                    pass = $('input[name="password"]').val()
+                }
+                
+                detail = {
+                    "author" : $('input[name="author"]').val(),
+                    "type" : $("input[name='type']:checked").val(),
+                    "openness" : $("input[name='openness']:checked").val(),
+                    "password" : pass,
+                    "title" : $('input[name="title"]').val(),
+                    "begin" : $('input[name="begin"]').val(),
+                    "duration" : $('input[name="duration"]').val(),
+                    "problems" : problems,
+                    "description" : $('textarea[name="description"]').val()
+                }
+                $.ajax({
+                    type : "post",
+                    url : "/vj/contest/addcontest/submit/",
+                    data : detail,
+                    success : function(responseData){
+                        if(responseData == "begin error"){
+                            alert("Please check your begin-time format!")
+                        }else if(responseData == "duration error"){
+                            alert("Please check your duration format!")
+                        }else if(responseData == "password error"){
+                            alert("Please set your password!")
+                        }else{
+                            //alert(responseData)
+                            window.location.href = responseData;
+                        }
+                    },
+                    error : function(responseData){
+                        alert("Add contest error!")
+                        console.error(responseData)
+                    }
+                })
+            }else{
+                alert("Please check your problems!")
+            }
+            
+        }
+    </script>
+    <div class="clearfix" style="margin-bottom: 10px;">
+        <div style="width:45%;float: left;padding-left: 10px"><!-- left panel -->
+            <form class="form-horizontal container-fluid">
+                <div class = "row" >
+                    <label class="col-sm-2 control-label">Author:</label>
+                    <div class="col-sm-5">
+                        <input type="text" class="form-control" style="width:200px;" name="author" value="{{user}}" disabled="disabled">
+                    </div>
+                </div>
+                <hr>
+                <div class = "row">
+                    <label class="col-sm-2 control-label">Type:<font color="red">*</font></label>
+                    <div class="col-md-offset-3">
+                    <label>
+                        <div class="radio">
+                        <input type="radio" id = "hide_score" name="type" value="icpc" checked="checked"/> Standard ICPC
+                        </div>
+                        <div class="radio" >
+                        <input type="radio" id = "show_score"  name="type" value="custom" />Customized
+                        </div>
+                    </label>
+                    </div>
+                </div>
+                <hr>
+                <div class = "row" id = "contest_open">
+                    <label class="col-sm-2 control-label">Openness:<font color="red">*</font></label>
+                    <div class="col-md-offset-3">
+                    <label>
+                        <div class="radio">
+                        <input  type="radio" id = "hide_pass" name="openness" value="public" checked="checked"> Public
+                        </div>
+                        <div class="radio">
+                        <input  type="radio" id = "show_pass" name="openness" value="private"> Private
+                        </div>
+                    </label>
+                    </div>
+                </div>
+
+                <hr>
+                <div class = "row">
+                    <label class="col-sm-2 control-label">Title:<font color="red">*</font></label>
+                    <div class="col-sm-5">
+                    <input type="text" class="form-control" style="width:200px;" name="title">
+                    </div>
+                </div>
+                <hr>
+                <div class = "row">
+                    <label class="col-sm-2 control-label">BeginTime:<font color="red">*</font></label>
+                    <div class="col-sm-5">
+                    <input type="text" class="form-control" placeholder="yyyy-MM-dd hh:mm:ss" style="width:200px;" name="begin">
+                    </div>
+                </div>
+                <hr>
+                <div class = "row">
+                    <label class="col-sm-2 control-label">Duration:<font color="red">*</font></label>
+                    <div class="col-sm-5">
+                    <input type="text" class="form-control" placeholder="hh:mm eg: 5:00" style="width:200px;" name="duration">
+                    </div>
+                </div>
+
+                <hr>
+                <div class = "row">
+                    <label class="col-sm-2 control-label">Description:</label>
+                    <div class="col-sm-8">
+                    <textarea name="description" class="form-control" maxlength="256" cols=40 rows=4 ></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div style="width:45%;float: left;padding-left: 20px"><!-- right panel -->
+            <div >
+            <table class="table">
+                <tbody id="probTable">
+                    <tr>
+                        <th><center>OJ</center> </th>
+                        <th><center>Problem</center> </th>
+                        <th><center>Title</center> </th>
+                        <th hidden="hidden" class="score_input"><center>Score</center> </th>
+                        <th onclick="addTR()"><center><button type = "button" class="btn btn-primary">&nbsp;&nbsp;&nbsp;Add&nbsp;&nbsp;&nbsp;</button></center></th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select name="originoj" class="form-control" value="" style="width:100px;" >
+                                <option value="HDU">HDU</option>
+                                <option value="FZU">FZU</option>
+                                <option value="ZOJ">ZOJ</option>
+                            </select>
+                        </td>
+                        <td >
+                            <input type="text" class="form-control"  name="prob" oninput="getTitle(event,this)" onpropertychange="getTitle(event,this)">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control" value="No Such Problem" name="title" disabled="disabled" style="width:200px;"> 
+                        </td>
+                        <td hidden="hidden" class="score_input">
+                            <input type="text" class="form-control"  name="score" style="width:80px;" value = "1">
+                        </td>
+                        <td onclick="removeTR(this)">
+                            <center><button type="button" class="btn btn-danger">Remove</button></center>
+                        </td>
+                        
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div align="center" style="width:100%;float: right;padding-right: 20px">
+                <button type="button" class="btn btn-primary" onclick="addcontest_submit()">Submit</button>
+        </div>
+</div>
+
+    <hr>
+{% endblock %}
+
+

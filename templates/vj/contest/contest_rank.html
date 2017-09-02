@@ -1,0 +1,105 @@
+<br>
+<table class="table table-bordered table-hover text-center" id = "rank_table">
+    <thead>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script type="text/javascript">
+    function str_pad_left(string,pad,length) {
+        return (new Array(length+1).join(pad)+string).slice(-length);
+    }
+
+    function secondsToTime(secs)
+    {
+        var hours = Math.floor(secs / (60 * 60));
+
+        var divisor_for_minutes = secs % (60 * 60);
+        var minutes = Math.floor(divisor_for_minutes / 60);
+
+        var divisor_for_seconds = divisor_for_minutes % 60;
+        var seconds = Math.ceil(divisor_for_seconds);
+
+        return hours + ":" + str_pad_left(minutes,'0',2)+':'+str_pad_left(seconds,'0',2);;
+    }
+    function refreshRankList(){
+        //type = {{ contest.typec }}
+        //alert(type)
+        $.ajax({
+            type: "post",
+            url: "/vj/contest/" + {{ contest.id }} + "/rank/",
+            dataType: "json",
+            success: function(data){
+                $("#rank_table tr").remove();
+
+                thHTML = "<tr><th class=\"text-center\">Rank</th><th class=\"text-center\">ID</th><th class=\"text-center\">{% if contest.typec == 'icpc' %}Solved{% endif %}{% if contest.typec == 'custom' %}Score{% endif %}</th><th class=\"text-center\">Penalty</th>"
+                //alert(type)
+                /*
+                if ({{ contest.typec }} == "custom"){
+                    thHTML = "<tr><th class=\"text-center\">Rank</th><th class=\"text-center\">ID</th><th class=\"text-center\">Score</th><th class=\"text-center\">Penalty</th>"
+                }
+                */
+                $.each(data.statsinfo, function(i, item){
+                    thHTML += "<th class=\"text-center\">" + item.probid + "</th>";
+                });
+                thHTML += "</tr>";
+                $("#rank_table thead").append(thHTML);
+                rank_num = 0;
+		var last_solved = -1;
+		var last_penalty = -1;
+		var rank_list=[];
+                $.each(data, function(i, item) {
+                    if (item != data.statsinfo) {
+			    rank_list.push(item);
+		    }
+	    	});
+	    	rank_list.sort(function(a,b){return a.solved==b.solved?a.penalty-b.penalty:b.solved-a.solved;});
+                $.each(rank_list, function(i, item) {
+                    if (item != data.statsinfo) {
+		    	if(item.solved!=last_solved || item.penalty!=last_penalty)
+                            rank_num += 1;
+			last_solved=item.solved;
+			last_penalty=item.penalty;
+                        trHTML = "<tr><td style=\"align:center;\">" + rank_num +
+                        "</td><td class=\"text-center\">" + item.name +
+                        "</td><td>" + item.solved +
+                        "</td><td>" + item.penalty + "</td>";
+                        $.each(item.probs, function(i, pitem){
+                            if (pitem.acNum == 0) {
+                                if (pitem.failNum == 0) {
+                                    trHTML += "<td></td>";
+                                } else {
+                                    trHTML += "<td style=\"background-color: red; color:white;\"><br><span>(-" + pitem.failNum + ")</span></td>";
+                                }
+                            } else {
+                                if (pitem.failNum == 0) {
+                                    trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "</td>";
+                                } else {
+                                    trHTML += "<td style=\"background-color: #99FF66;\">" + secondsToTime(pitem.acTime) + "<br><span>(-" + pitem.failNum + ")</span></td>";
+                                }
+                            }
+                        });
+                        trHTML += "</tr>"
+                        $("#rank_table tbody").append(trHTML);
+                    }
+                });
+                thHTML = "<tr><td></td><td></td><td></td><td></td>";
+                $.each(data.statsinfo, function(i, item){
+                    thHTML += "<td style=\"background-color: #D0D0D0;\">" + item.acNum + "/" + item.tryNum + "</td>";
+                });
+                thHTML += "<tr>"
+                $("#rank_table tbody").append(thHTML);
+
+            }
+        });
+    }
+
+
+
+
+    $(document).ready(function () {
+	refreshRankList();
+	//setInterval(function(){refreshRankList();},10000);
+    })
+</script>

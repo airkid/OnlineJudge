@@ -1,0 +1,41 @@
+{% extends "vj/base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block navbar %}{% include "vj/include/navbar.html" %}{% endblock %}
+
+{% block header %}
+<h1>Login</h1>
+{% endblock %}
+
+{% block content %}
+
+<form class="form-horizontal container-fluid" action="/vj/login/" method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" class="form-control" name="username">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" class="form-control" name="password">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label><input type="checkbox" name="remember">  Remember me</label>
+            </div>
+        </div>
+    </div>
+    <center><button type="submit" class="btn btn-primary">Login</button></center>
+</form>
+
+{% endblock %}

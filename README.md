@@ -7,13 +7,14 @@ The Online Judge Website for Shandong University
 1. Hack function
 1. Discuss in contest
 1. Rejudge
-1. Virtual judge
-1. Performance stability
 
 ## Utils:
 1. Testcase Adder: Python script to add testcases
 1. Plagiarism: Code checker via Jplag
 1. Zabbix: Status monitor
+
+## Update 2017-9-2
+- Virtual Judge
 
 ## Update 2017-5-14
 - Special Judge (python checker)

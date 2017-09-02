@@ -1,0 +1,86 @@
+</br>
+<table class="table">
+    <thead>
+    <script type="text/javascript">
+        $('#refresh_button').click(function () {
+            $.ajax({
+                    type: 'post',
+                    url: "/vj/contest/" + {{ contest_id }} + "/status/",
+                    success: function (responseData) {
+                        $('#panel-status').html(responseData);
+                    }
+            })
+        })
+    </script>
+    <tr>
+        <th>RunID</th>
+        <th>Problem</th>
+        <th>Status</th>
+        <th>Language</th>
+        <th>User</th>
+        <th>SubmitTime&nbsp;&nbsp;&nbsp;<button id = "refresh_button" class="btn btn-success">Refresh</button></th>
+
+    </tr>
+    </thead>
+    <tbody>
+    {% for item in status_list %}
+
+        <tr
+                {% ifequal item.result 'Waiting' %}
+                    class="info"
+                {% endifequal %}
+                {% ifequal item.result 'Accepted' %}
+                    class="success"
+                {% else %}
+                    class="danger"
+                {% endifequal %}
+         >
+            <td>{{ item.runid }}</td>
+            <td><a href="/vj/problem/{{ item.pro.proid}}">{{ item.pro.title }}</a></td>
+            {% ifequal item.pro.isCCF True %}
+                 <td>{{ item.score }}</td>
+	    {% else %}
+		    {% ifequal item.result "Compilation Error"%}
+			<td>{{ item.result }}</td>
+		    {% else %}
+			<td>{{ item.result }}</td>
+		    {% endifequal %}
+            {% endifequal %}
+            {% ifequal item.user.id user.id %}
+                <td><a href="/vj/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_lang_display }}</a></td>
+            {% else %}
+		    {% ifequal user.is_staff True %}
+			<td><a href="/vj/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_lang_display }}</a></td>
+		    {% else %}
+			<td>{{ item.get_lang_display }}</td>
+		    {% endifequal %}
+            {% endifequal %}
+            <td>{{ item.user.username }}</td>
+            <td>{{ item.time | date:"Y-m-d H:i:s" }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<center>
+<ul class="pagination">
+    <script type="text/javascript">
+        //$(document).ready(function () {
+        function request_contest_status(pg){
+            $.ajax({
+                    type: 'get',
+                    url: "/vj/contest/" + {{ contest_id }} + "/status/?pg=" + pg,
+                    success: function (responseData) {
+                        $('#panel-status').html(responseData);
+                    }
+            })
+        }
+    </script>
+    {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}"
+               href="javascript:request_contest_status({{ id }});">
+            {{ id }}
+            </a>
+        </li>
+    {% endfor %}
+</ul>
+</center>

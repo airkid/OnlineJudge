@@ -171,14 +171,12 @@ function getServerTime(){
 	        }
 	    });
         $('#get_status').click(function () {
-//                alert("Hello!");
             contest_id = {{contest.id}};
             $.ajax({
                 type: 'post',
                 url: "/contest/" + contest_id + "/status/",
                 success: function (responseData) {
                     $('#panel-status').html(responseData);
-		//MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 }
             })
         })
@@ -189,6 +187,11 @@ function getServerTime(){
     		var current=getServerTime();
     		var elapsed;
     		elapsed=(current-start.getTime())/1000;
+            console.log(srcarea.value.length);
+            if(srcarea.value.length<16){
+                alert("Code too short. 16B at least.");
+                return false;
+            }
     		if(elapsed>duration){
     		    alert("Contest is Over!");
     		    return false;
@@ -205,7 +208,7 @@ function getServerTime(){
     		    )
     		}
         })
-            $('#overview').tab('show');
+        $('#overview').tab('show');
         })
     </script>
 {% endblock %}

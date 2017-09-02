@@ -1,0 +1,58 @@
+{% extends "vj/base_list.html" %}
+
+{% block title %}Contest{% endblock %}
+
+{% block navbar %}{% include "vj/include/navbar-contest.html" %}{% endblock %}
+
+{% block otherbutton %}
+    <button class="btn btn-default" type="button" onclick="form_filter()">Filter</button>
+    <button class="btn btn-default" type="button" onclick="form_reset()">Reset</button>
+    <button class="btn btn-primary" type="button" onclick="add_contest()">Add&nbsp;Contest</button>
+    <script type="text/javascript">
+        function add_contest(){
+            window.location.href = "/vj/contest/addcontest/"
+        }
+        function form_filter(){
+            $("input[type=submit]").trigger("click");
+        }
+        function form_reset(){
+            $("#name").val("")
+            $("#username").val("")
+            $("input[type=submit]").trigger("click");   
+        }
+    </script>
+{% endblock %}
+{% block list %}
+<form id="cont_table" method="post">
+{% csrf_token %}
+    <tr>
+        <th>Name
+        <input class="form-control" type="text" id="name" style="width:200px;" name="name" value="{{name}}">
+        </th>
+        <th>StartTime</th>
+        <th>Duration</th>
+        <th>Problems</th>
+        <th>User
+        <input class="form-control" type="text" id="username" style="width:100px;" name="username" value="{{username}}">
+        </th>
+
+        <input type="submit" style="display:none" ></input> 
+    </tr>
+    {% for item in list %}
+        <tr>
+            <th><a href="/vj/contest/{{ item.id }}">{{ item.name }}</a></th>
+            <th>{{ item.start_time | date:"Y-m-d H:i:s" }}</th>
+            <th>{{ item.duration_time}}</th>
+            <th>{{ item.problems.count}}</th>
+            <th>{{ item.uid.username}}</th>
+        </tr>
+    {% endfor %}
+</form>
+{% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/vj/contest?pg={{ id }}">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

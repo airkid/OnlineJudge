@@ -1,0 +1,28 @@
+scrapyd must be openned on the project folder
+
+
+tools:
+http://www1.tc711.com/tool/BASE64.htm
+https://docs.djangoproject.com/en/1.7/ref/databases/
+https://docs.djangoproject.com/en/1.8/ref/models/querysets/
+
+blog:
+http://www.cnblogs.com/zhongtang/p/5634545.html
+http://blog.csdn.net/qq_26572969/article/details/71657581
+http://scrapyd.readthedocs.io/en/latest/api.html#api
+http://blog.csdn.net/happyanger6/article/details/51404837
+http://www.cnblogs.com/ajianbeyourself/p/3889017.html
+http://www.tuicool.com/articles/UbABNr
+http://docs.jinkan.org/docs/celery/getting-started/first-steps-with-celery.html
+
+questions:
+http://stackoverflow.com/questions/22403871/content-length-should-be-specified-for-iterable-data-of-type-class-dict
+https://segmentfault.com/q/1010000007080674
+
+code:
+https://github.com/ruitian/VirtualJudge/tree/master/OJCC/spiders
+
+
+problem table
+if note is empty, the item is ''
+

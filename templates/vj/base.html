@@ -1,0 +1,83 @@
+<html>
+    <head>
+
+        <link rel="shortcut icon" href="/static/vj/img/favicon.ico"/>
+	<link rel="bookmark" href="/static/vj/img/favicon.ico"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10" />
+        <meta charset="utf-8" />
+        <script src="http://cdn.bootcss.com/jquery/1.11.2/jquery.min.js"></script>
+        <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <script src="http://cdn.bootcss.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+
+	<script type="text/x-mathjax-config">
+	MathJax.Hub.Config({
+	    jax: ["input/TeX", "output/HTML-CSS"],
+	    tex2jax: {
+		inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+		displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+		processEscapes: true,
+		skipTags: ['script', 'noscript', 'style', 'textarea', 'code']
+	    },
+	    messageStyle: "none",
+	    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
+	});
+	</script>
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <script>{% block script %}{% endblock %}</script>
+        <script src="/static/vj/js/csrf.js"></script>
+        <script src="/static/vj/js/jquery.form.js"></script>
+        <title>{% block title %}{% endblock %}</title>
+
+    </head>
+
+    <body>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header"><a class="navbar-brand" href="/vj/"><span>
+                <img src="/static/vj/img/logo.png" width="250px"> 
+                </span></a></div>
+                <ul class="nav navbar-nav">
+                {% block navbar %}{% endblock %}
+                </ul>
+                {% if user %}
+                <div class="navbar-collapse  navbar-right"><!-- Welcome, -->
+                    <!-- <a href="/profile/" class="navbar-link bg-info">{{ user.name }} </a> -->
+                    <a href="/vj/profile/">
+                        <button type="button" class="btn btn-primary navbar-btn" >
+                          <span class="glyphicon glyphicon-user" ></span> {{ user.username }}
+                        </button>
+                    </a>
+                    <a href="/vj/logout">
+                        <button type="button" class="btn btn-danger navbar-btn" >
+                          <span class="glyphicon glyphicon-log-out" ></span> Logout
+                        </button>
+                    </a>
+                    <!-- <a href="/logout" class="navbar-link bg-danger"></a> -->
+                </div>
+                {% else %}
+                <div class="navbar-collapse navbar-right">
+                    <a href="/vj/login"><button class="btn btn-success navbar-btn"><span class="glyphicon glyphicon-log-in" ></span> Login</button></a>
+                    <a href="/vj/register"><button class="btn btn-default navbar-btn">Register</button></a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+        <div class="container">
+           <!--  <div class="page-header"> -->
+            {% block header %}{% endblock %}
+            <!-- </div> -->
+            {% if err %}
+            <div class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+              <strong>{{ err }}</strong>
+            </div>
+            {% endif %}
+        {% block content %}{% endblock %}
+        </div>
+        <footer>
+        <center>{% block footer %}SDUVJ{% endblock %}</center>
+        </footer>
+    </body>
+</html>

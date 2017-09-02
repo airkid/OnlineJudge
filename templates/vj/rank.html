@@ -1,0 +1,33 @@
+{% extends "vj/base_list.html" %}
+
+{% block title %}Rank{% endblock %}
+
+{% block navbar %}{% include "vj/include/navbar-rank.html" %}{% endblock %}
+
+{% block list %}
+    <tr>
+        <th><center>Rank</center></th>
+        <th><center>ID</center></th>
+	<th><center>Name</center></th>
+        <th><center>Solved</center></th>
+        <th><center>Submit</center></th>
+        <th><center>Ratio</center></th>
+    </tr>
+    {% for item in list %}
+        <tr>
+            <th><center> {{forloop.counter|add:idx}} </center></th>
+            <th><center> {{item.id}} </center></th>
+            <th><center> {{item.nickname}} </center></th>
+            <th><center> {{item.problem_ac}} </center></th>
+            <th><center> <a href="/vj/status/?search={{ item.id }}">{{item.problem_try}} </a></center></th>
+            <th><center> {{item.ratio}}% </center></th>
+        </tr>
+    {% endfor %}
+{% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/vj/rank?pg={{ id }}">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

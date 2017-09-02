@@ -1,0 +1,136 @@
+{% extends "vj/status/status_list.html" %}
+
+{% block title %}Status{% endblock %}
+
+{% block navbar %}{% include "vj/include/navbar-status.html" %}{% endblock %}
+
+{% block list %}
+<script type="text/javascript">
+$(document).ready(function() 
+{
+    $("#sta_table").submit(function()
+    {
+        $(this).ajaxSubmit({
+            type:"post",  //提交方式
+            dataType:"text", //数据类型
+            url:"/vj/status/", //请求url
+            data: $('#sta_table').serialize(),
+            success:function(data){ //提交成功的回调函数
+            }
+        });
+        return true; //不刷新页面
+    });
+})
+</script>
+
+<form id="sta_table" method="post">
+{% csrf_token %}
+    <tr>
+        <th><center>RunID 
+        <input class="form-control" type="text" id="runid" style="width:70px;" name="runid" value="{{runid}}">
+        </center></th>
+
+        <th><center>OriginOJ 
+            <select name="originoj" class="form-control" value="{{originoj}}" style="width:100px;" >
+            <option value="">ALL</option>
+            <option value="HDU" {% if originoj == "HDU" %}  selected = "selected"  {% endif %} >HDU</option>
+            <option value="FZU" {% if originoj == "FZU" %}  selected = "selected"  {% endif %} >FZU</option>
+            <option value="ZOJ" {% if originoj == "ZOJ" %}  selected = "selected"  {% endif %} >ZOJ</option>
+        </center></th>
+
+        <th><center>ProblemID 
+        <input class="form-control" type="text" id="problemid" style="width:70px;" name="problemid" value="{{problemid}}">
+        </center></th>
+
+        <th><center>Problem 
+        <input class="form-control" type="text" id="title" style="width:150px;" name="title" value="{{title}}">
+        </center></th>
+
+        <th><center>Status/Score 
+            <select name="result" class="form-control" value="{{result}}" style="width:120px;" >
+            <option value="">ALL</option>
+            <option value="Accepted" {% if result == "Accepted" %}  selected = "selected"  {% endif %} >Accepted</option>
+            <option value="Wrong" {% if result == "Wrong" %}  selected = "selected"  {% endif %} >Wrong Answer</option>
+            <option value="Compilation" {% if result == "Compilation" %}  selected = "selected"  {% endif %} >CompilationError</option>
+            <option value="Runtime" {% if result == "Runtime" %}  selected = "selected"  {% endif %} >Runtime Error</option>
+            <option value="Submit" {% if result == "Submit" %}  selected = "selected"  {% endif %} >Submit Failed</option>
+            <option value="Time" {% if result == "Time" %}  selected = "selected"  {% endif %} >Time Limit Exceed</option>
+            <option value="Memory" {% if result == "Memory" %}  selected = "selected"  {% endif %} >Memory Limit Exceed</option>
+            <option value="Waiting" {% if result == "Waiting" %}  selected = "selected"  {% endif %} >Waiting</option>
+            <option value="Pending" {% if result == "Pending" %}  selected = "selected"  {% endif %} >Pending</option>
+            <option value="Segmentation" {% if result == "Segmentation" %}  selected = "selected"  {% endif %} >Segmentation Fault</option>
+            <option value="Non-zero" {% if result == "Non-zero" %}  selected = "selected"  {% endif %} >Non-zero Exit Code</option>
+            <option value="Presentation" {% if result == "Presentation" %}  selected = "selected"  {% endif %} >Presentation Error</option>
+        </center></th>
+
+        <th><center>Language 
+            <select name="lang" class="form-control" value="{{lang}}" style="width:100px;" >
+            <option value="">ALL</option>
+            <option value="0" {% if lang == "0" %}  selected = "selected"  {% endif %} >G++</option>
+            <option value="1" {% if lang == "1" %}  selected = "selected"  {% endif %} >GCC</option>
+            <option value="2" {% if lang == "2" %}  selected = "selected"  {% endif %} >C++</option>
+            <option value="3" {% if lang == "3" %}  selected = "selected"  {% endif %} >C</option>
+            <option value="4" {% if lang == "4" %}  selected = "selected"  {% endif %} >Pascal</option>
+            <option value="5" {% if lang == "5" %}  selected = "selected"  {% endif %} >Java</option>
+            <option value="6" {% if lang == "6" %}  selected = "selected"  {% endif %} >C#</option>
+            <option value="7" {% if lang == "7" %}  selected = "selected"  {% endif %} >Python</option>
+        </center></th>
+
+        <th><center>Time</center></th>
+        <th><center>Memory</center></th>
+        <th><center>User <input class="form-control" type="text" id="uid" style="width:60px;" name="uid" value="{{uid}}"></center></th>
+        <th><center>SubmitTime</center></th>
+        <input type="submit" style="display:none" ></input> 
+    </tr>
+    {% for item in list %}
+        <tr
+                {% ifequal item.result 'Waiting' %}
+                    class="info"
+                {% endifequal %}
+                {% ifequal item.result 'Accepted' %}
+                    class="success"
+                {% else %}
+                    class="danger"
+                {% endifequal %}
+         >
+        <td><center>{{ item.runid }}</a></center></td>
+        <td><center>{{ item.pro.originoj }}</a></center></td>
+        <td><center>{{ item.pro.problemid }}</a></center></td>
+            <td><center><a href="/vj/problem/{{ item.pro.proid}}">{{ item.pro.title }}</a></center></td>
+            {% ifequal item.pro.isCCF True %}
+                 <td><center>{{ item.score }}</center></td>
+            {% else %}
+                {% ifequal item.result "Compilation Error" %}
+                  {% ifequal item.user.id user.id %}
+                    <td><center>{{ item.result }}</center></td>
+                  {% else %}
+                    <td><center>{{ item.result }}</center></td>
+                  {% endifequal %}
+                    {% else %}
+                <td><center>{{ item.result }}</center></td>
+                {% endifequal %}
+            {% endifequal %}
+        {% ifequal item.user.id user.id %}
+            <td><center><a href="/vj/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
+        {% else %}
+            {% ifequal user.is_staff True%}
+                <td><center><a href="/vj/show_source?solution_id={{ item.runid }}" target="_blank">{{ item.get_lang_display }}</a></center></td>
+            {% else %}
+                <td><center>{{ item.get_lang_display }}</center></td>
+            {% endifequal %}
+        {% endifequal %}
+            <td><center>{{ item.timec }}</center></td>
+            <td><center>{{ item.memoryc }}</center></td>
+            <td><center>{{ item.user.username }}</center></td>
+            <td><center>{{ item.time | date:"Y-m-d H:i:s" }}</center></td>
+        </tr>
+    {% endfor %}
+</form>
+{% endblock %}
+{% block page %}
+    <ul class="pagination">
+        {% for id in page %}
+        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

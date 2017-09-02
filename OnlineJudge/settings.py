@@ -28,9 +28,9 @@ SECRET_KEY = 'uxel0_!g%a*dt4lhijguccv!-_ta@1tu_at_o4f*bv5ail^)4$'
 # DEBUG = True
 # ALLOWED_HOSTS = []
 
-#DEBUG = False
-DEBUG = True
-ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'sduoj.org', 'acm.sdu.edu.cn']
+DEBUG = False
+#DEBUG = True
+ALLOWED_HOSTS = ['211.87.227.207', '127.0.0.1', 'localhost', 'acm.sdu.edu.cn']
 # ALLOWEDHOSTS = ['*']
 
 DEFAULT_CHARSET = 'utf-8'
@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'OJ',
     'djcelery',
+    'vj',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -76,6 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -94,7 +96,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'oj',
         'USER': 'oj',
-        'PASSWORD': 'pbOk7Yi2QSDGPuQr',
+        'PASSWORD': 'RESET_BY_YOUR_OWN',
     }
 }
 
@@ -120,7 +122,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #STATIC_ROOT = "./static/" #Error when loading from other dir
-STATIC_ROOT = "/home/sduacm/OnlineJudge/static/"
+#STATIC_ROOT = "/home/sduacm/OnlineJudge/static/"
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "static/vj"),
+]
+
 
 MEDIA_DIR='media/'
 

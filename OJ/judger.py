@@ -1,5 +1,4 @@
-
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from OJ.models import *
 from subprocess import call, DEVNULL, Popen
 import threading
@@ -7,6 +6,7 @@ import psutil
 import lorun
 import os
 import getpass
+import codecs
 import resource as res
 from threading import Thread, Event
 from queue import Queue
@@ -65,14 +65,7 @@ def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit, lang)
     ftemp = open(user_path, 'w')
     if type(p_path)==str:
         p_path=[p_path]
-#    print('p_path:')
-#    print(p_path)
-#    print('in_path:')
-#    print(in_path)
-#    print('user_path:')
-#    print(user_path)
-#    print('memolimit')
-#    print(memory_limit)
+
     
     runcfg = {
         'args':p_path,
@@ -87,8 +80,7 @@ def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit, lang)
         runcfg['files'] = {}
     else:
         runcfg['memorylimit']=0x3f3f3f3f3f3f3f3f
-#    print('runcfg')
-#    print(runcfg)
+    print(runcfg)
     rst = lorun.run(runcfg)
     print('result')
     print(rst)
@@ -111,16 +103,10 @@ def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit, lang)
         right = fout.read().strip()
         fout.close()
         right = right.replace(chr(13),'')
-        
-        #print('right:')
-        #print(right)
-        #print('output:')
-        #print(output)
-        #os.remove('temp.out')
+
         if right != output:
             if ''.join(output.split()) == ''.join(right.split()):
-                #print('PE')
-                rst['result'] = 1
+                rst['result'] = 1   #PE
             else:
                 rst['result'] = 4
     return rst
@@ -128,7 +114,7 @@ def runone(p_path, in_path, out_path, user_path, time_limit, memory_limit, lang)
 class Daemon:
     from os import cpu_count
 
-    DAEMON_MAX = cpu_count()
+    DAEMON_MAX = 10
 
     __initialled = None
     __queue = None
@@ -216,16 +202,8 @@ class Complier(Daemon):
             os.symlink(ori, src)
         except:
             pass
-#        print('src:')
-#        print(src)
-#        print('dst:')
-#        print(dst)
         cmd = 'gcc %s -o %s -fno-asm -Wall -lm -std=c99 -DONLINE_JUDGE -O2'%(src,dst)
         sudocmd = 'sudo su compileuser -c \'%s\''%cmd
-#        print('cmd:')
-#        print(cmd)
-#        print('sudocmd:')
-#        print(sudocmd)
         self.result = call(sudocmd, stdout=DEVNULL, stderr=open(RESULT_PATH + self.id, mode='w+'),shell=True)
         if self.result > 0:
             # syntax error
@@ -530,22 +508,20 @@ class Judger(Daemon):
         self.__submit = submit
         prob = self.__submit.pid
         self.id = str(self.__submit.id)
-        # self.uid = str(self.__submit.uid)
-        # self.pid = str(self.__submit.pid)
         self.lang = int(self.__submit.lang)
         self.lcpu = int(prob.limit_time)
         self.lmem = int(prob.limit_memory)
         Daemon.__init__(self)
 
     def _run(self):
+        codecs.open('judger.log', 'w', 'utf8').write("New Judger Thread judging %d"%int(self.id))
         c = Complier(self.id, self.lang)
         self.status = 1
         c.wait()
         if c.result:
-#            print("compile result is"+str(c.result))
             self.__submit.status = c.result
             self.__submit.save()
-            return
+            return True
         caseList = TestCase.objects.filter(pid__exact=self.__submit.pid)
         testList = []
         for case in caseList:
@@ -554,66 +530,26 @@ class Judger(Daemon):
         for test in testList:
             test.wait()
             if test.result:
-                #if erroroccur:
-                #    test.cancel()
-                #    continue
                 erroroccur = True
                 errortest = test
                 self.__submit.status = test.result
                 self.__submit.run_time = max(self.__submit.run_time,test.cpu_used)
                 self.__submit.run_memory = max(self.__submit.run_memory,test.memory_used)
-                # self.__submit.save()
             else:
                 self.__submit.status = test.result
                 self.__submit.run_time = max(self.__submit.run_time,test.cpu_used)
                 self.__submit.run_memory = max(self.__submit.run_memory,test.memory_used)
                 self.__submit.score += test.score
-                #print('score:')
-                #print(self.__submit.score)
         if erroroccur:
             self.__submit.status = errortest.result
             self.__submit.run_time = errortest.cpu_used
             self.__submit.run_memory = errortest.memory_used
-        #self.__submit.save()
-
-
-    #    if not over:
-    #        test = testList[-1]
-    #        self.__submit.status = 0
-    #        # use ms
-    #        self.__submit.run_time = testList[-1].cpu_used
-    #        # use kb
-    #        self.__submit.run_memory = testList[-1].memory_used
-    #        # print('save')
-    #        # print(self.__submit.run_time)
-    #        # print(self.__submit.run_memory)
-    #        self.__submit.save()
-        # print('over')
-        # 递归删除二进制目录
-
         for test in testList:
-            #print('Removing tmpfile')
             test.ifile.close()
             test.ofile.close()
             test.userofile.close()
-
         from shutil import rmtree
         rmtree(BINARY_PATH + self.id)
-
-
-
-        #cmd = ['sudo','rm','-rf','/jail'+BINARY_PATH+self.id]
-        #cp = Popen(cmd)
-        #cp.wait()
-        #print('Result is '+str(self.status))
-#        cmd = ['rm','-r','/jail/tmp/sduoj/binary/'+self.id]
-#        rm = Popen(cmd)
-#        rm.wait()
-
-        #try是尝试过的总次数，ac是正确的题目数
-
-        # problem_try = Submit.objects.filter(uid=self.__submit.uid,status=1).count()
-        #print(self.__submit.uid.info)
         problem_try = UserInfo.objects.get(id=self.__submit.uid.info.id).problem_try
         self.__submit.uid.info.problem_try = problem_try + 1
         self.__submit.uid.info.problems_try.add(self.__submit.pid)
@@ -629,16 +565,3 @@ class Judger(Daemon):
         self.__submit.save()
 
 Judger.init()
-
-
-# for test
-
-# judger = Judger('javare',3,1,5368.70912)
-# judger = Judger('javabigmem',3,1,268435456)
-# judger = Judger('javabigtime',3,1,536870912)
-# judger = Judger('javasmallmem',3,1,536870912)
-# judger = Judger('normal',2,1,209715200)
-# judger = Judger('re',2,1,209715200)
-# judger = Judger('bigmem',2,1,400715200)
-# judger = Judger('bigtime',2,1,209715200)
-# judger = Judger('smallmem',2,1,209715200)

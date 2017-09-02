@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+
+
+    <link rel="shortcut icon" href="../static/img/favicon.ico"/>
+    <link rel="bookmark" href="../static/img/favicon.ico"/>
+
+    <meta charset="UTF-8">
+    <script src="http://cdn.bootcss.com/jquery/1.11.2/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="/static/js/csrf.js"></script>
+    <script src="/static/js/jquery.form.js"></script>
+    <script type="text/javascript" src="/static/syntaxhighlighter/js/shCore.js"></script>
+    <script type="text/javascript" src="/static/syntaxhighlighter/css/shBrushCpp.js"></script>
+    <script type="text/javascript" src="/static/syntaxhighlighter/css/shBrushJava.js"></script>
+    <link href="/static/syntaxhighlighter/css/shCore.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/syntaxhighlighter/css/shThemeDefault.css" rel="stylesheet" type="text/css"/>
+    <title>Source Code</title>
+</head>
+<body>
+<div class="container">
+      <center>
+          <div class="page-header">
+            <h1>Source code</h1>
+            <p>Problem:<a href="/vj/problem/{{ status.pro.proid }}">{{ status.pro.title }}</a>&nbsp;&nbsp;&nbsp;User:{{ status.user.username }}</p>
+	    <p>RunID:{{ status.runid }}&nbsp;&nbsp;&nbsp;Memory:{{ status.memoryc }} KB&nbsp;&nbsp;&nbsp;Time:{{ status.timec }} ms</p>
+            <p>Language:{{ lang }}&nbsp;&nbsp;&nbsp;Result:{{ status.result }}</p>
+        </div>
+      </center>
+<!--
+      Source Code:
+      <pre class="brush:{{ lang }}">{{ code }}</pre>
+      Compile Result:
+      <pre class="brush:{{ lang }}">{{ status.result }}</pre>
+-->
+      Source Code:
+      <pre class="brush:{{ lang }}">{{ code }}</pre>
+<!--       Compile Result:
+      <pre>{{ status.result }}</pre> -->
+    </div>
+
+<script type="text/javascript">
+    SyntaxHighlighter.all()
+</script>
+</body>
+</html>

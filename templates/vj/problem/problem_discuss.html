@@ -1,0 +1,34 @@
+{% extends "vj/problem/problem_base.html" %}
+
+{% block script %}
+$(document).ready(function(){
+    $("#selsrc").click(function(){
+        $("#srcarea").prop("disabled",false);
+        $("#fuparea").prop("disabled",true);
+    });
+    $("#selfup").click(function(){
+        $("#srcarea").prop("disabled",true);
+        $("#fuparea").prop("disabled",false);
+    });
+});
+
+{% endblock %}
+
+
+{% block detail %}
+<form id="chatForm" class="form-horizontal panel container" method="GET" action="." style="width:98%">
+    <hr>
+	{% for msg in list %}
+	        <strong class="text-primary">{{msg.uid}} :</strong><small class="text-muted">post on {{msg.time}}</small>
+            <p style="white-space:normal;word-break:break-all;word-wrap:break-word;">{{msg.content}}</p>
+	        <hr>
+	{% endfor %}
+</form>
+<form class="form-horizontal panel container" method="POST" enctype="multipart/form-data" style="width:95%">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea placeholder="please don't over 1024 characters." id="srcarea" name="content" class="form-control" maxlength="1024" rows="5"></textarea>
+    </div>
+    <center><button type="submit" class="btn btn-primary">Discuss</button></center>
+</form>
+{% endblock %}

@@ -1,0 +1,37 @@
+
+<hr>
+<form id="chatForm" class="form-horizontal panel container" method="GET" action="." style="width:98%">
+	{% for clar in list %}
+	        <strong class="text-primary">Clarification:</strong><small class="text-muted">
+	        post on {{clar.time}}</small>
+	        <p style="white-space:normal;word-break:break-all;word-wrap:break-word;">{{clar.clarification}}</p>
+	        <hr>
+	{% endfor %}
+</form>
+{% if isAuthor == True %}
+<form class="form-horizontal container-fluid" style="width:95%">
+    {% csrf_token %}
+    <div class="form-group">
+        <textarea id="clar_content" name="clar" class="form-control" maxlength="256" rows="5"></textarea>
+    </div>
+    <center><button type="button" class="btn btn-primary" id="post_clar_button" onclick="post_clar()">Post New Clarification</button></center>
+</form>
+<script type="text/javascript">
+	function post_clar(){
+		var clar = $("#clar_content").val()
+            if(clar == ""){
+                alert("New Clarification is null!")
+            }else{
+                $.ajax({
+                    type : "post",
+                    url : "/vj/contest/"+{{contest.id}}+"/clarification/",
+                    data : {"clar":clar},
+                    success : function(responseData){
+                       	$('#panel-clar').html(responseData)
+                       	scrollTo(0,0)
+                    }
+                })
+            }
+	}
+</script>
+{% endif %}

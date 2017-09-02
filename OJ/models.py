@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 
 # Create your models here.
 
@@ -14,6 +16,16 @@ LANG_CHOICE = (
     # (6, 'FORTRAN'),
 )
 
+class OverwriteStorage(FileSystemStorage):
+    def get_available_name(self, name):
+        """
+        Returns a filename that's free on the target storage system, and
+        available for new content to be written to.
+        """
+        # If the filename already exists, remove it as if it was a true file system
+        if self.exists(name):
+            self.delete(name)
+        return name
 
 class Problem(models.Model):
     uid = models.ForeignKey(User)
@@ -37,6 +49,9 @@ class Problem(models.Model):
     numberOfContest = models.IntegerField(default=0)
     # CCF题目专用
     isCCF = models.BooleanField(default=False)
+    #Special Judge 
+    isSPJ = models.BooleanField(default=False)
+    checker = models.FileField(default=None, upload_to='/home/sduacm/OnlineJudge/JudgeFiles/checker/',storage=OverwriteStorage(),blank=True)
 
     def accepted(self):
         query = Submit.objects.filter(pid=self, status=0)
@@ -77,15 +92,6 @@ class UserInfo(models.Model):
             return 0
         return int(self.problem_ac/self.problem_try*100)
 
-# class ProblemsAC(models.Model):
-#     uid = models.ForeignKey(UserInfo);
-#     pid = models.ForeignKey(Problem);
-#     number = models.IntegerField(default=0);
-
-# class ProblemsTry(models.Model):
-#     uid = models.ForeignKey(UserInfo);
-#     pid = models.ForeignKey(Problem);
-#     number = models.IntegerField(default=0);
 
 class TestCase(models.Model):
     pid = models.ForeignKey(Problem)
@@ -93,7 +99,7 @@ class TestCase(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     sample = models.BooleanField(default=False)
     input = models.TextField()
-    output = models.TextField()
+    output = models.TextField(blank=True)
     # CCF专用
     score = models.IntegerField(default=0)
 
@@ -150,6 +156,7 @@ class Submit(models.Model):
         (-6, 'Memory Limit Exceeded'),
         (-7, 'Wrong Answer'),
         (-8, 'Presentation Error'),
+        (-9, 'Special Judge Error'),
     )
 
     pid = models.ForeignKey(Problem)
@@ -159,7 +166,8 @@ class Submit(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=1)
     run_time = models.PositiveSmallIntegerField(null=True, default=0)
     run_memory = models.PositiveIntegerField(null=True, default=0)
-    source_code = models.FileField(default=None, upload_to='/home/sduacm/OnlineJudge/JudgeFiles/source/')
+    source_code = models.FileField(default=None, upload_to='/home/sduacm/OnlineJudge/JudgeFiles/source/',storage=OverwriteStorage())
+    check_rst = models.FileField(default=None, upload_to='/home/sduacm/OnlineJudge/JudgeFiles/checkresult/',storage=OverwriteStorage())
     # -1表示非比赛提交, 其余为比赛提交
     cid = models.IntegerField(default=-1)
     return_code = models.IntegerField(null=True)

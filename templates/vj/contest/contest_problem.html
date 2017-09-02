@@ -1,0 +1,59 @@
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+	inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+	displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+	processEscapes: true,
+	skipTags: ['script', 'noscript', 'style', 'textarea', 'code']
+    },
+    messageStyle: "none",
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] }
+});
+</script>
+
+<style type="text/css">
+pre{
+	word-break: keep-all;
+	word-wrap: break-word;
+	white-space: pre-wrap;
+} 
+</style>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<div class="text-center">
+    <h1 class="text-success">{{ problem.title }}</h1>
+    <ul class="list-inline">
+        <li>Time Limit: {{ problem.timelimit }}s</li>
+        &nbsp;&nbsp;
+        <li>Memory Limit: {{ problem.memorylimit|filesizeformat }}</li>
+    </ul>
+</div>
+
+<h3 class="text-info" >Description</h3>
+{% autoescape off %}
+<pre style="white-space: normal;">{{ problem.description }}</pre>
+
+<h3 class="text-info" >Input</h3>
+<pre style="white-space: normal;">{{ problem.input }}</pre>
+
+<h3 class="text-info" >Output</h3>
+<pre style="white-space: normal;">{{ problem.output }}</pre>
+
+{% endautoescape %}
+
+<h3 class="text-info">Sample Input</h3>
+<pre>{{ problem.sampleinput }}</pre>
+
+<h3 class="text-info">Sample Output</h3>
+<pre>{{ problem.sampleoutput }}</pre>
+
+{% autoescape off %}
+<h3 class="text-info" >Note</h3>
+<pre style="white-space: normal;">{{ problem.note }}</pre>
+
+<h3 class="text-info" >Source</h3>
+<pre>{{ problem.originoj }} {{ problem.problemid }}</pre>
+{% endautoescape %}

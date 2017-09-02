@@ -1,0 +1,82 @@
+</br>
+{% if not err %}
+<div style="width:80%;margin:0 auto;">
+    <table class="table table-striped">
+        <col width="20%"/>
+        <col width="40%"/>
+        <col width="40%"/>
+        <thead>
+        <tr>
+            <th>&nbsp;
+            {% if isAuthor == True %}
+                <a href="/vj/contest/{{ contest.id }}/modify/">Modify Contest</a>
+            {% endif %}
+            </th>
+            <th>ID</th>
+            <th>Title</th>
+            {% if contest.typec == 'custom' %}
+                <th>Score&nbsp;&nbsp;&nbsp;</th>
+            {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for cnt,chr,problem,score, status in problems %}
+            <tr>
+                {% if status == 0 %}
+                <th></th>
+                {% else %}
+                <th style="color:green;"><span class="glyphicon glyphicon-check" aria-hidden="true" style="color:green;"></span>&nbsp;Yes</th>
+                {% endif%}
+                <th>Problem {{ chr }}</th>
+                <th><a href="#" onclick="get_problem({{ problem.proid }})">{{ problem.title }}</a></th>
+                {% if contest.typec == 'custom' %}
+                <th>{{ score }}</th>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if contest.description %}
+        {% if contest.description != "" %}
+            <center>
+                <div class = "row" style="width:60%">
+                    <label class="col-sm-3 control-label">Description:</label>
+                    <p class="col-sm-8 control-label" style="white-space:normal;word-break:break-all;word-wrap:break-word;text-align: left;">
+                        {{ contest.description }}
+                    </p>
+                </div>
+            </center>
+        {% endif %}
+    {% endif %}
+</div>
+{% endif %}
+{% if err and err == "You do not have access to this contest."%}
+<form class="form-horizontal container-fluid" action="/vj/contest/{{contest.id}}/" method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class=" col-md-6 col-md-offset-3">
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" class="form-control" name="password">
+            </div>
+        </div>
+    </div>
+    <center>
+        <button type="submit" class="btn btn-primary">Access</button>
+    </center>
+    <hr>
+</form>
+{% endif %}
+<script type="text/javascript">
+    function get_problem(problem_id) {
+        $.ajax({
+            type: 'get',
+            url: "/vj/contest/" + {{ contest.id }} +"/get_problem?pid="+problem_id,
+            success: function (responseData) {
+                $('#panel-problem').html(responseData);
+		MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                $('#problem_detail').tab('show');
+            }
+        })
+    }
+</script>

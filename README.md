@@ -1,15 +1,10 @@
 # OnlineJudge
+![travis](https://travis-ci.org/Bluefissure/OnlineJudge.svg?branch=develop)
+
 The Online Judge Website for Shandong University
 
-## Todo:
-
-1. Support Python
-1. Hack function
-1. Discuss in contest
-1. Rejudge
-1. Special judge
-1. Virtual judge
-1. Performance stability
+## Install & Docs:
+- [Wiki](https://github.com/Bluefissure/OnlineJudge/wiki)
 
 ## Utils:
 1. Testcase Adder: Python script to add testcases
@@ -17,20 +12,9 @@ The Online Judge Website for Shandong University
 1. Zabbix: Status monitor
 
 
-## Update 2017-4-20 14:27:39
-- Update a lot in security, contests, front-end
+## Todo:
 
-
-## Update 2016-7-25 11:30:29
-- register时添加空UserInfo
-- Problem界面Description自动换行
-- CCF格式题目返回值
-
-
-## Update 2016-7-26 09:30:23
-- 代码中无法添加中文注释
-- 题目中的rank、discuss界面
-- MathJax插件
-- status中的Memory,Time,CodeLength列
-- Syntax Error --> Compile Error?
-
+1. Support Python
+1. Hack function
+1. Discuss in contest
+1. Rejudge

@@ -1,0 +1,166 @@
+Traceback (most recent call last):
+  File "judger.py", line 75, in <module>
+    main()
+  File "judger.py", line 70, in main
+    daemon_init('./log/null','./log/daemon.log','./log/daemon.err')    # 调用之后，你的程序已经成为了一个守护进程，可以执行自己的程序入口了
+  File "judger.py", line 39, in daemon_init
+    pid = os.fork()
+AttributeError: module 'os' has no attribute 'fork'
+Traceback (most recent call last):
+  File "judger.py", line 119, in <module>
+    main()
+  File "judger.py", line 82, in main
+    db = pymysql.connect("211.87.227.207","vj","vDpAZE74bJrYahZKmcvZxwc","vj",use_unicode=True, charset="utf8")
+NameError: name 'pymysql' is not defined
+Exception in thread Thread-4:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 414, in _make_request
+    httplib_response = conn.getresponse(buffering=True)
+TypeError: getresponse() got an unexpected keyword argument 'buffering'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 562, in urlopen
+    body=body, headers=headers)
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 416, in _make_request
+    httplib_response = conn.getresponse()
+  File "/usr/lib/python3.4/http/client.py", line 1208, in getresponse
+    response.begin()
+  File "/usr/lib/python3.4/http/client.py", line 380, in begin
+    version, status, reason = self._read_status()
+  File "/usr/lib/python3.4/http/client.py", line 342, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "/usr/lib/python3.4/socket.py", line 374, in readinto
+    return self._sock.recv_into(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 330, in send
+    timeout=timeout
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 612, in urlopen
+    raise MaxRetryError(self, url, e)
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/threading.py", line 920, in _bootstrap_inner
+    self.run()
+  File "/home/li/Templates/SDU-VirtualJudge-master/vjtest/crawl/bin/judger.py", line 46, in run
+    r = requests.post(schURL,data = dictdata)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 88, in post
+    return request('post', url, data=data, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 44, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 455, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 558, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 378, in send
+    raise ConnectionError(e)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 414, in _make_request
+    httplib_response = conn.getresponse(buffering=True)
+TypeError: getresponse() got an unexpected keyword argument 'buffering'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 562, in urlopen
+    body=body, headers=headers)
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 416, in _make_request
+    httplib_response = conn.getresponse()
+  File "/usr/lib/python3.4/http/client.py", line 1208, in getresponse
+    response.begin()
+  File "/usr/lib/python3.4/http/client.py", line 380, in begin
+    version, status, reason = self._read_status()
+  File "/usr/lib/python3.4/http/client.py", line 342, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "/usr/lib/python3.4/socket.py", line 374, in readinto
+    return self._sock.recv_into(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 330, in send
+    timeout=timeout
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 612, in urlopen
+    raise MaxRetryError(self, url, e)
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/threading.py", line 920, in _bootstrap_inner
+    self.run()
+  File "/home/li/Templates/SDU-VirtualJudge-master/vjtest/crawl/bin/judger.py", line 46, in run
+    r = requests.post(schURL,data = dictdata)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 88, in post
+    return request('post', url, data=data, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 44, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 455, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 558, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 378, in send
+    raise ConnectionError(e)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)
+
+Exception in thread Thread-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 414, in _make_request
+    httplib_response = conn.getresponse(buffering=True)
+TypeError: getresponse() got an unexpected keyword argument 'buffering'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 562, in urlopen
+    body=body, headers=headers)
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 416, in _make_request
+    httplib_response = conn.getresponse()
+  File "/usr/lib/python3.4/http/client.py", line 1208, in getresponse
+    response.begin()
+  File "/usr/lib/python3.4/http/client.py", line 380, in begin
+    version, status, reason = self._read_status()
+  File "/usr/lib/python3.4/http/client.py", line 342, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "/usr/lib/python3.4/socket.py", line 374, in readinto
+    return self._sock.recv_into(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 330, in send
+    timeout=timeout
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 612, in urlopen
+    raise MaxRetryError(self, url, e)
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.4/threading.py", line 920, in _bootstrap_inner
+    self.run()
+  File "/home/li/Templates/SDU-VirtualJudge-master/vjtest/crawl/bin/judger.py", line 46, in run
+    r = requests.post(schURL,data = dictdata)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 88, in post
+    return request('post', url, data=data, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/api.py", line 44, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 455, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/usr/lib/python3/dist-packages/requests/sessions.py", line 558, in send
+    r = adapter.send(request, **kwargs)
+  File "/usr/lib/python3/dist-packages/requests/adapters.py", line 378, in send
+    raise ConnectionError(e)
+requests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=6800): Max retries exceeded with url: /schedule.json (Caused by <class 'ConnectionResetError'>: [Errno 104] Connection reset by peer)

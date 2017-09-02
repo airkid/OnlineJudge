@@ -1,0 +1,22 @@
+{% extends "vj/base.html" %}
+
+{% block header %}
+<span class="h1">{% block title %}{% endblock %}</span>
+<form class="form-inline pull-right">
+    <input class="form-control" type="text" placeholder="Search" name="search">
+    <button class="btn btn-default" type="submit">Search</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<table class="table">
+    {% block list %}{% endblock %}
+</table>
+<center>
+    <ul class="pagination">
+        {% for id in page %}
+                <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/vj/status?pg={{ id }}">{{ id }}</a></li>
+        {% endfor %}
+    </ul>
+</center>
+{% endblock %}

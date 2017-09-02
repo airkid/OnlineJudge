@@ -1,0 +1,42 @@
+{% extends "vj/problem/problem_base.html" %}
+
+{% block detail %}
+    <style type="text/css">
+    pre{
+        word-break: normal;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    } 
+    </style>
+
+    {% autoescape off %}
+
+    <h3 class="text-info">Description</h3>
+    <pre style="white-space:normal;">{{ problem.description }}</pre>
+
+
+    <h3 class="text-info">Input</h3>
+    <pre style="white-space:normal;">{{ problem.input }}</pre>
+
+    <h3 class="text-info">Output</h3>
+    <pre style="white-space:normal;">{{ problem.output }}</pre>
+
+    {% endautoescape %}
+
+    <h3 class="text-info">Sample Input</h3>
+    <pre>{{ problem.sampleinput }}</pre>
+
+    <h3 class="text-info">Sample Output</h3>
+    <pre>{{ problem.sampleoutput }}</pre>
+
+    {% autoescape off %}
+
+    <h3 class="text-info" >Note</h3>
+    <pre style="white-space:normal;">{{ problem.note }}</pre>
+
+    <h3 class="text-info">Source</h3>
+    <pre>{{ problem.originoj }} {{ problem.problemid }}</pre>
+
+    {% endautoescape %}
+
+{% endblock %}

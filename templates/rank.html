@@ -27,7 +27,8 @@
 {% block page %}
     <ul class="pagination">
         {% for id in page %}
-        <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}" href="/rank?pg={{ id }}">{{ id }}</a></li>
+                <li><a class="{% if pg == id %}active{% else %}disabled{% endif %}"  name="pagination" href="#">{{ id }}</a></li>
         {% endfor %}
     </ul>
+    <script type="text/javascript" src="/static/js/pagination.js"></script>
 {% endblock %}

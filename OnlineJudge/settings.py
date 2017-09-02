@@ -46,7 +46,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'OJ',
     'djcelery',
-    'vj',
+    #'vj',
 )
 
 MIDDLEWARE_CLASSES = (

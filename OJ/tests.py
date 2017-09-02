@@ -20,7 +20,7 @@ class SubmitTest(TestCase):
     def test_submit(self):
         print("test start")
         u=User()
-    	sub = Submit(pid=Problem.objects.all()[0], uid=u, lang=2)
+        sub = Submit(pid=Problem.objects.all()[0], uid=u, lang=2)
         sub.save()
         content_file = ContentFile("#include <iostream>\nusing namespace std;\nint main()\n{\n    int a,b;\n    cin >> a >> b;\n    cout << a+b << endl;\n    return 0;\n}")
         sub.source_code.save(name=str(sub.id), content=content_file)

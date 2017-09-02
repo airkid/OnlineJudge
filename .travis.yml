@@ -10,8 +10,6 @@ before_install:
   - git clone https://github.com/lodevil/Lo-runner.git
   - cd Lo-runner && sudo ./setup.py build && sudo ./setup.py install
   - cd ..
-  - mysql -e "CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';"
-  - mysql -e "GRANT ALL ON *.* TO 'oj'@'%'; "
 
 # command to install dependencies
 install: "pip install -r requirements.txt"

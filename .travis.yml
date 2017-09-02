@@ -6,8 +6,8 @@ services:
   - mysql
 
 before_install:
-  - mysql -e 'CREATE DATABASE oj;'
-  - mysql oj -e 'CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';'
+  - mysql -e "CREATE DATABASE oj;"
+  - mysql oj -e "CREATE USER 'oj'@'%' IDENTIFIED BY 'RESET_BY_YOUR_OWN';"
 
 # command to install dependencies
 install: "pip install -r requirements.txt"

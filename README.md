@@ -15,6 +15,7 @@ The Online Judge Website for Shandong University
 
 ## Update 2017-9-2
 - Virtual Judge
+- Travis-ci auto-build
 
 ## Update 2017-5-14
 - Special Judge (python checker)
